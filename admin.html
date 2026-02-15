@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المسوق | إضافة عقار</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #f0f2f5; }
+        .admin-container { max-width: 800px; margin: 50px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-brand">لوحة المسوق العقاري</span>
+            <a href="index.html" class="btn btn-primary btn-sm">الذهاب للموقع الرئيسي</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="admin-container">
+            <h3 class="mb-4 text-center fw-bold text-primary">إضافة عقار جديد</h3>
+            <form id="addPropertyForm">
+                <div class="row g-3">
+                    
+                    <div class="col-12">
+                        <label class="form-label">عنوان الإعلان</label>
+                        <input type="text" class="form-control" id="propTitle" placeholder="مثال: فيلا مودرن درج صالة" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">السعر (ر.س)</label>
+                        <input type="number" class="form-control" id="propPrice" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">نوع العرض</label>
+                        <select class="form-select" id="propType">
+                            <option value="sale">بيع</option>
+                            <option value="rent">إيجار</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">نوع العقار</label>
+                        <select class="form-select" id="propCategory">
+                            <option value="villa">فيلا</option>
+                            <option value="apartment">شقة</option>
+                            <option value="land">أرض</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">المدينة</label>
+                        <select class="form-select" id="propCity">
+                            <option value="الرياض">الرياض</option>
+                            <option value="جدة">جدة</option>
+                            <option value="الدمام">الدمام</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">اسم الحي</label>
+                        <input type="text" class="form-control" id="propDistrict" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">رابط الصورة</label>
+                        <input type="url" class="form-control" id="propImage" placeholder="https://example.com/image.jpg" required>
+                        <div class="form-text">يمكنك نسخ رابط صورة من جوجل للتجربة</div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">وصف تفصيلي</label>
+                        <textarea class="form-control" id="propDesc" rows="3" placeholder="اكتب تفاصيل العقار هنا للبحث..."></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold">حفظ ونشر العقار</button>
+                    </div>
+                </div>
+            </form>
+
+            <hr class="my-5">
+            
+            <h5 class="fw-bold mb-3">العقارات الحالية</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>العنوان</th>
+                            <th>السعر</th>
+                            <th>حذف</th>
+                        </tr>
+                    </thead>
+                    <tbody id="propertiesTable">
+                        </tbody>
+                </table>
+                <button onclick="clearAll()" class="btn btn-danger btn-sm">حذف جميع العقارات</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadTable);
+
+        document.getElementById('addPropertyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // جمع البيانات من النموذج
+            const newProp = {
+                id: Date.now(), // رقم فريد
+                title: document.getElementById('propTitle').value,
+                price: document.getElementById('propPrice').value,
+                type: document.getElementById('propType').value,
+                category: document.getElementById('propCategory').value,
+                city: document.getElementById('propCity').value,
+                district: document.getElementById('propDistrict').value,
+                image: document.getElementById('propImage').value,
+                description: document.getElementById('propDesc').value
+            };
+
+            // الحفظ في LocalStorage
+            const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
+            properties.unshift(newProp); // إضافة في البداية
+            localStorage.setItem('myProperties', JSON.stringify(properties));
+
+            alert('تم نشر العقار بنجاح!');
+            document.getElementById('addPropertyForm').reset();
+            loadTable();
+        });
+
+        function loadTable() {
+            const tbody = document.getElementById('propertiesTable');
+            tbody.innerHTML = '';
+            const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
+
+            properties.forEach((prop, index) => {
+                const row = `
+                <tr>
+                    <td>${prop.title}</td>
+                    <td>${prop.price}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteProp(${index})">X</button></td>
+                </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function deleteProp(index) {
+            const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
+            properties.splice(index, 1);
+            localStorage.setItem('myProperties', JSON.stringify(properties));
+            loadTable();
+        }
+
+        function clearAll() {
+            if(confirm('هل أنت متأكد من حذف كل العقارات؟')) {
+                localStorage.removeItem('myProperties');
+                loadTable();
+            }
+        }
+    </script>
+</body>
+</html>
