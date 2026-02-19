@@ -52,11 +52,35 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">المدينة</label>
-                        <select class="form-select" id="propCity">
+                        <select class="form-select" id="propCity" onchange="toggleCustomCity()" required>
                             <option value="الرياض">الرياض</option>
+                            <option value="مكة المكرمة">مكة المكرمة</option>
+                            <option value="المدينة المنورة">المدينة المنورة</option>
                             <option value="جدة">جدة</option>
                             <option value="الدمام">الدمام</option>
+                            <option value="الخبر">الخبر</option>
+                            <option value="الظهران">الظهران</option>
+                            <option value="الأحساء">الأحساء</option>
+                            <option value="القطيف">القطيف</option>
+                            <option value="الجبيل">الجبيل</option>
+                            <option value="الطائف">الطائف</option>
+                            <option value="تبوك">تبوك</option>
+                            <option value="بريدة">بريدة</option>
+                            <option value="عنيزة">عنيزة</option>
+                            <option value="حائل">حائل</option>
+                            <option value="أبها">أبها</option>
+                            <option value="خميس مشيط">خميس مشيط</option>
+                            <option value="جازان">جازان</option>
+                            <option value="نجران">نجران</option>
+                            <option value="الباحة">الباحة</option>
+                            <option value="عرعر">عرعر</option>
+                            <option value="سكاكا">سكاكا</option>
+                            <option value="ينبع">ينبع</option>
+                            <option value="حفر الباطن">حفر الباطن</option>
+                            <option value="الخرج">الخرج</option>
+                            <option value="other" class="fw-bold text-primary">أخرى (إضافة يدوية)...</option>
                         </select>
+                        <input type="text" class="form-control mt-2 d-none" id="customCity" placeholder="اكتب اسم المدينة أو المنطقة هنا">
                     </div>
 
                     <div class="col-md-6">
@@ -89,11 +113,12 @@
                         <tr>
                             <th>العنوان</th>
                             <th>السعر</th>
+                            <th>المدينة</th>
                             <th>حذف</th>
                         </tr>
                     </thead>
                     <tbody id="propertiesTable">
-                        </tbody>
+                    </tbody>
                 </table>
                 <button onclick="clearAll()" class="btn btn-danger btn-sm">حذف جميع العقارات</button>
             </div>
@@ -103,17 +128,37 @@
     <script>
         document.addEventListener('DOMContentLoaded', loadTable);
 
+        // إظهار أو إخفاء حقل الإضافة اليدوية للمدينة
+        function toggleCustomCity() {
+            const citySelect = document.getElementById('propCity');
+            const customInput = document.getElementById('customCity');
+            if (citySelect.value === 'other') {
+                customInput.classList.remove('d-none');
+                customInput.required = true;
+            } else {
+                customInput.classList.add('d-none');
+                customInput.required = false;
+                customInput.value = ''; // تفريغ الحقل
+            }
+        }
+
         document.getElementById('addPropertyForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
+            // تحديد المدينة النهائية
+            let finalCity = document.getElementById('propCity').value;
+            if (finalCity === 'other') {
+                finalCity = document.getElementById('customCity').value;
+            }
+
             // جمع البيانات من النموذج
             const newProp = {
-                id: Date.now(), // رقم فريد
+                id: Date.now(),
                 title: document.getElementById('propTitle').value,
                 price: document.getElementById('propPrice').value,
                 type: document.getElementById('propType').value,
                 category: document.getElementById('propCategory').value,
-                city: document.getElementById('propCity').value,
+                city: finalCity,
                 district: document.getElementById('propDistrict').value,
                 image: document.getElementById('propImage').value,
                 description: document.getElementById('propDesc').value
@@ -121,11 +166,12 @@
 
             // الحفظ في LocalStorage
             const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
-            properties.unshift(newProp); // إضافة في البداية
+            properties.unshift(newProp);
             localStorage.setItem('myProperties', JSON.stringify(properties));
 
             alert('تم نشر العقار بنجاح!');
             document.getElementById('addPropertyForm').reset();
+            toggleCustomCity(); // إعادة الوضع للافتراضي
             loadTable();
         });
 
@@ -138,7 +184,8 @@
                 const row = `
                 <tr>
                     <td>${prop.title}</td>
-                    <td>${prop.price}</td>
+                    <td>${Number(prop.price).toLocaleString()} ر.س</td>
+                    <td>${prop.city}</td>
                     <td><button class="btn btn-danger btn-sm" onclick="deleteProp(${index})">X</button></td>
                 </tr>
                 `;
