@@ -11,6 +11,7 @@
         .admin-container { max-width: 800px; margin: 50px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .login-container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin: 5px; border: 1px solid #ccc; }
+        .pending-box { background: #fff3cd; border: 2px dashed #ffc107; }
     </style>
 </head>
 <body>
@@ -43,6 +44,25 @@
     </div>
 
     <div class="container d-none" id="adminSection">
+        
+        <div class="admin-container pending-box mb-4">
+            <h4 class="fw-bold text-warning mb-3"><i class="fas fa-bell"></i> طلبات عرض عقارات (بانتظار المراجعة)</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered text-center align-middle bg-white">
+                    <thead class="table-warning">
+                        <tr>
+                            <th>العنوان</th>
+                            <th>جوال المالك</th>
+                            <th>المدينة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="admin-container">
             <h3 class="mb-4 text-center fw-bold text-primary" id="formTitle">إضافة عقار جديد</h3>
             <form id="addPropertyForm">
@@ -69,27 +89,17 @@
                         <label class="form-label">نوع العقار</label>
                         <select class="form-select" id="propCategory" required>
                             <optgroup label="عقارات سكنية">
-                                <option value="فيلا">فيلا</option>
-                                <option value="شقة">شقة</option>
-                                <option value="دور">دور</option>
-                                <option value="ملحق">ملحق</option>
-                                <option value="عمارة">عمارة</option>
-                                <option value="قصر">قصر</option>
+                                <option value="فيلا">فيلا</option><option value="شقة">شقة</option><option value="دور">دور</option>
+                                <option value="ملحق">ملحق</option><option value="عمارة">عمارة</option><option value="قصر">قصر</option>
                                 <option value="بيت شعبي">بيت شعبي</option>
                             </optgroup>
                             <optgroup label="عقارات تجارية">
-                                <option value="محل">محل</option>
-                                <option value="مكتب">مكتب</option>
-                                <option value="معرض">معرض</option>
-                                <option value="مستودع">مستودع</option>
-                                <option value="مجمع تجاري">مجمع تجاري</option>
+                                <option value="محل">محل</option><option value="مكتب">مكتب</option><option value="معرض">معرض</option>
+                                <option value="مستودع">مستودع</option><option value="مجمع تجاري">مجمع تجاري</option>
                             </optgroup>
                             <optgroup label="أراضي ومزارع">
-                                <option value="أرض سكنية">أرض سكنية</option>
-                                <option value="أرض تجارية">أرض تجارية</option>
-                                <option value="أرض زراعية">أرض زراعية</option>
-                                <option value="مزرعة">مزرعة</option>
-                                <option value="استراحة / شاليه">استراحة / شاليه</option>
+                                <option value="أرض سكنية">أرض سكنية</option><option value="أرض تجارية">أرض تجارية</option>
+                                <option value="أرض زراعية">أرض زراعية</option><option value="مزرعة">مزرعة</option><option value="استراحة / شاليه">استراحة / شاليه</option>
                             </optgroup>
                             <optgroup label="أخرى">
                                 <option value="أخرى">أخرى...</option>
@@ -99,45 +109,33 @@
                     <div class="col-md-6">
                         <label class="form-label">المدينة</label>
                         <select class="form-select" id="propCity" onchange="toggleCustomCity()" required>
-                            <option value="الرياض">الرياض</option>
-                            <option value="مكة المكرمة">مكة المكرمة</option>
-                            <option value="المدينة المنورة">المدينة المنورة</option>
-                            <option value="جدة">جدة</option>
-                            <option value="الدمام">الدمام</option>
-                            <option value="الخبر">الخبر</option>
-                            <option value="الظهران">الظهران</option>
-                            <option value="الأحساء">الأحساء</option>
-                            <option value="القطيف">القطيف</option>
-                            <option value="الجبيل">الجبيل</option>
-                            <option value="الطائف">الطائف</option>
-                            <option value="تبوك">تبوك</option>
-                            <option value="بريدة">بريدة</option>
-                            <option value="عنيزة">عنيزة</option>
-                            <option value="حائل">حائل</option>
-                            <option value="أبها">أبها</option>
-                            <option value="خميس مشيط">خميس مشيط</option>
-                            <option value="جازان">جازان</option>
-                            <option value="نجران">نجران</option>
-                            <option value="الباحة">الباحة</option>
-                            <option value="عرعر">عرعر</option>
-                            <option value="سكاكا">سكاكا</option>
-                            <option value="ينبع">ينبع</option>
-                            <option value="حفر الباطن">حفر الباطن</option>
+                            <option value="الرياض">الرياض</option><option value="مكة المكرمة">مكة المكرمة</option><option value="المدينة المنورة">المدينة المنورة</option>
+                            <option value="جدة">جدة</option><option value="الدمام">الدمام</option><option value="الخبر">الخبر</option>
+                            <option value="الظهران">الظهران</option><option value="الأحساء">الأحساء</option><option value="القطيف">القطيف</option>
+                            <option value="الجبيل">الجبيل</option><option value="الطائف">الطائف</option><option value="تبوك">تبوك</option>
+                            <option value="بريدة">بريدة</option><option value="عنيزة">عنيزة</option><option value="حائل">حائل</option>
+                            <option value="أبها">أبها</option><option value="خميس مشيط">خميس مشيط</option><option value="جازان">جازان</option>
+                            <option value="نجران">نجران</option><option value="الباحة">الباحة</option><option value="عرعر">عرعر</option>
+                            <option value="سكاكا">سكاكا</option><option value="ينبع">ينبع</option><option value="حفر الباطن">حفر الباطن</option>
                             <option value="الخرج">الخرج</option>
                             <option value="other" class="fw-bold text-primary">أخرى (إضافة يدوية)...</option>
                         </select>
                         <input type="text" class="form-control mt-2 d-none" id="customCity" placeholder="اكتب اسم المدينة أو المنطقة هنا">
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">اسم الحي</label>
                         <input type="text" class="form-control" id="propDistrict" required>
                     </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label text-danger">جوال المالك (للمسوق فقط)</label>
+                        <input type="text" class="form-control border-danger" id="propOwnerPhone" placeholder="05xxxxxxxx">
+                    </div>
                     
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">صور العقار (يمكنك تحديد عدة صور)</label>
                         <input type="file" class="form-control" id="propImageInput" accept="image/*" multiple>
-                        <div class="form-text text-success">يُفضل ألا تتجاوز 4 صور للحفاظ على مساحة المتصفح</div>
                         <div id="imagePreviewContainer" class="mt-2 d-flex flex-wrap"></div>
                     </div>
 
@@ -154,14 +152,14 @@
 
             <hr class="my-5">
             
-            <h5 class="fw-bold mb-3">العقارات الحالية</h5>
+            <h5 class="fw-bold mb-3">العقارات المنشورة الحالية</h5>
             <div class="table-responsive">
                 <table class="table table-bordered text-center align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>الصورة الرئيسية</th>
+                            <th>الرئيسية</th>
                             <th>العنوان</th>
-                            <th>السعر</th>
+                            <th>جوال المالك</th>
                             <th>المدينة</th>
                             <th>الإجراءات</th>
                         </tr>
@@ -169,22 +167,23 @@
                     <tbody id="propertiesTable">
                     </tbody>
                 </table>
-                <button onclick="clearAll()" class="btn btn-danger btn-sm">حذف جميع العقارات</button>
             </div>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script>
         const VALID_USERNAME = "admin";
         const VALID_PASSWORD = "12345";
         let editingId = null; 
         let currentImagesData = [];
+        let processingPendingId = null; // آي دي الطلب المعلق الذي تتم مراجعته الآن
 
         document.addEventListener('DOMContentLoaded', () => {
             if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
                 showAdminDashboard();
             }
-            loadTable();
+            loadTables();
         });
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -205,22 +204,18 @@
 
         function logout() { sessionStorage.removeItem('isAdminLoggedIn'); location.reload(); }
 
-        // --- نظام ضغط ومعالجة عدة صور ---
+        // --- نظام ضغط ومعالجة الصور ---
         document.getElementById('propImageInput').addEventListener('change', async function(e) {
             const files = Array.from(e.target.files);
             if (files.length === 0) return;
-
-            if(!editingId) currentImagesData = [];
+            if(!editingId && !processingPendingId) currentImagesData = [];
             const previewContainer = document.getElementById('imagePreviewContainer');
-            if(!editingId) previewContainer.innerHTML = '';
-
+            if(!editingId && !processingPendingId) previewContainer.innerHTML = '';
             for (let file of files) {
                 let dataUrl = await compressImage(file);
                 currentImagesData.push(dataUrl);
-                
                 const imgElem = document.createElement('img');
-                imgElem.src = dataUrl;
-                imgElem.className = 'preview-img';
+                imgElem.src = dataUrl; imgElem.className = 'preview-img';
                 previewContainer.appendChild(imgElem);
             }
         });
@@ -232,19 +227,10 @@
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800;
-                        const MAX_HEIGHT = 800;
-                        let width = img.width;
-                        let height = img.height;
-                        if (width > height) {
-                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                        } else {
-                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
+                        let width = img.width, height = img.height;
+                        if (width > 800) { height *= 800 / width; width = 800; }
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                         resolve(canvas.toDataURL('image/jpeg', 0.5)); 
                     };
                     img.src = event.target.result;
@@ -260,19 +246,17 @@
             else { customInput.classList.add('d-none'); customInput.required = false; customInput.value = ''; }
         }
 
+        // --- حفظ البيانات ونشرها ---
         document.getElementById('addPropertyForm').addEventListener('submit', function(e) {
             e.preventDefault();
-
-            if (currentImagesData.length === 0 && !editingId) {
-                alert("الرجاء اختيار صورة واحدة على الأقل للعقار!"); return;
-            }
+            if (currentImagesData.length === 0 && !editingId) { alert("اختر صورة واحدة على الأقل!"); return; }
 
             let finalCity = document.getElementById('propCity').value;
             if (finalCity === 'other') finalCity = document.getElementById('customCity').value;
 
             let properties = JSON.parse(localStorage.getItem('myProperties')) || [];
 
-            if (editingId) {
+            if (editingId && !processingPendingId) {
                 const index = properties.findIndex(p => p.id === editingId);
                 if (index !== -1) {
                     properties[index].title = document.getElementById('propTitle').value;
@@ -281,11 +265,11 @@
                     properties[index].category = document.getElementById('propCategory').value;
                     properties[index].city = finalCity;
                     properties[index].district = document.getElementById('propDistrict').value;
+                    properties[index].ownerPhone = document.getElementById('propOwnerPhone').value;
                     properties[index].description = document.getElementById('propDesc').value;
                     if (currentImagesData.length > 0) properties[index].images = currentImagesData;
                 }
                 alert('تم تحديث العقار بنجاح!');
-                resetFormState();
             } else {
                 const newProp = {
                     id: Date.now(),
@@ -295,24 +279,32 @@
                     category: document.getElementById('propCategory').value,
                     city: finalCity,
                     district: document.getElementById('propDistrict').value,
+                    ownerPhone: document.getElementById('propOwnerPhone').value,
                     images: currentImagesData, 
                     description: document.getElementById('propDesc').value
                 };
                 try {
                     properties.unshift(newProp);
-                    localStorage.setItem('myProperties', JSON.stringify(properties));
                     alert('تم نشر العقار بنجاح!');
-                    resetFormState();
-                } catch (error) { alert("عفواً، الذاكرة ممتلئة! يرجى حذف بعض العقارات القديمة."); }
+                    
+                    // إذا كان هذا العقار قادم من طلبات الزوار المعلقة، نقوم بحذفه من هناك
+                    if (processingPendingId) {
+                        let pending = JSON.parse(localStorage.getItem('pendingProperties')) || [];
+                        pending = pending.filter(p => p.id !== processingPendingId);
+                        localStorage.setItem('pendingProperties', JSON.stringify(pending));
+                    }
+                } catch (error) { alert("عفواً، الذاكرة ممتلئة!"); return;}
             }
 
-            if(!editingId) localStorage.setItem('myProperties', JSON.stringify(properties));
-            loadTable();
+            localStorage.setItem('myProperties', JSON.stringify(properties));
+            resetFormState();
+            loadTables();
         });
 
-        function editProp(id) {
-            const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
-            const prop = properties.find(p => p.id === id);
+        // --- جلب الطلب المعلق للمراجعة ونقله لنموذج الإضافة ---
+        function reviewPending(id) {
+            const pendingProps = JSON.parse(localStorage.getItem('pendingProperties')) || [];
+            const prop = pendingProps.find(p => p.id === id);
             if (!prop) return;
 
             document.getElementById('propTitle').value = prop.title;
@@ -329,81 +321,139 @@
             toggleCustomCity();
 
             document.getElementById('propDistrict').value = prop.district;
+            document.getElementById('propOwnerPhone').value = prop.ownerPhone || '';
             document.getElementById('propDesc').value = prop.description;
 
             const previewContainer = document.getElementById('imagePreviewContainer');
             previewContainer.innerHTML = '';
-            
-            let imagesArray = Array.isArray(prop.images) ? prop.images : (prop.image ? [prop.image] : []);
-            currentImagesData = imagesArray;
-
-            imagesArray.forEach(imgData => {
+            currentImagesData = Array.isArray(prop.images) ? prop.images : [];
+            currentImagesData.forEach(imgData => {
                 const imgElem = document.createElement('img');
-                imgElem.src = imgData;
-                imgElem.className = 'preview-img';
+                imgElem.src = imgData; imgElem.className = 'preview-img';
                 previewContainer.appendChild(imgElem);
             });
             
             document.getElementById('propImageInput').value = ""; 
+            processingPendingId = id;
+            editingId = null;
 
-            editingId = id;
-            document.getElementById('formTitle').textContent = 'تعديل العقار';
+            document.getElementById('formTitle').textContent = 'مراجعة ونشر طلب الزائر';
+            document.getElementById('formTitle').classList.replace('text-primary', 'text-warning');
             const btn = document.getElementById('submitBtn');
-            btn.textContent = 'حفظ التعديلات';
-            btn.classList.replace('btn-success', 'btn-warning');
+            btn.textContent = 'موافقة ونشر للعوام';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // رفض وحذف الطلب المعلق
+        function deletePending(id) {
+            if(confirm('هل أنت متأكد من رفض وحذف هذا الطلب؟')) {
+                let pending = JSON.parse(localStorage.getItem('pendingProperties')) || [];
+                pending = pending.filter(p => p.id !== id);
+                localStorage.setItem('pendingProperties', JSON.stringify(pending));
+                loadTables();
+                if(processingPendingId === id) resetFormState();
+            }
+        }
+
+        function editProp(id) {
+            const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
+            const prop = properties.find(p => p.id === id);
+            if (!prop) return;
+            document.getElementById('propTitle').value = prop.title;
+            document.getElementById('propPrice').value = prop.price;
+            document.getElementById('propType').value = prop.type;
+            document.getElementById('propCategory').value = prop.category;
+            
+            const citySelect = document.getElementById('propCity');
+            if (Array.from(citySelect.options).some(opt => opt.value === prop.city && opt.value !== 'other')) {
+                citySelect.value = prop.city;
+            } else { citySelect.value = 'other'; document.getElementById('customCity').value = prop.city; }
+            toggleCustomCity();
+
+            document.getElementById('propDistrict').value = prop.district;
+            document.getElementById('propOwnerPhone').value = prop.ownerPhone || '';
+            document.getElementById('propDesc').value = prop.description;
+
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            previewContainer.innerHTML = '';
+            currentImagesData = Array.isArray(prop.images) ? prop.images : (prop.image ? [prop.image] : []);
+            currentImagesData.forEach(imgData => {
+                const imgElem = document.createElement('img'); imgElem.src = imgData; imgElem.className = 'preview-img';
+                previewContainer.appendChild(imgElem);
+            });
+            document.getElementById('propImageInput').value = ""; 
+            editingId = id; processingPendingId = null;
+
+            document.getElementById('formTitle').textContent = 'تعديل العقار المنشور';
+            document.getElementById('formTitle').classList.replace('text-warning', 'text-primary');
+            const btn = document.getElementById('submitBtn');
+            btn.textContent = 'حفظ التعديلات'; btn.classList.replace('btn-success', 'btn-warning');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function resetFormState() {
-            editingId = null;
-            currentImagesData = [];
+            editingId = null; processingPendingId = null; currentImagesData = [];
             document.getElementById('addPropertyForm').reset();
             document.getElementById('formTitle').textContent = 'إضافة عقار جديد';
+            document.getElementById('formTitle').classList.replace('text-warning', 'text-primary');
             document.getElementById('imagePreviewContainer').innerHTML = '';
             const btn = document.getElementById('submitBtn');
-            btn.textContent = 'حفظ ونشر العقار';
-            btn.classList.replace('btn-warning', 'btn-success');
+            btn.textContent = 'حفظ ونشر العقار'; btn.classList.replace('btn-warning', 'btn-success');
             toggleCustomCity();
         }
 
-        function loadTable() {
+        function loadTables() {
+            // تحميل العقارات المنشورة
             const tbody = document.getElementById('propertiesTable');
             tbody.innerHTML = '';
             const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
-
             properties.forEach((prop, index) => {
                 let coverImg = Array.isArray(prop.images) ? prop.images[0] : prop.image;
                 const row = `
                 <tr>
                     <td><img src="${coverImg}" width="50" height="50" style="object-fit:cover; border-radius:5px;"></td>
                     <td>${prop.title}</td>
-                    <td>${Number(prop.price).toLocaleString()} ر.س</td>
+                    <td class="text-danger fw-bold">${prop.ownerPhone || '-'}</td>
                     <td>${prop.city}</td>
                     <td>
                         <button class="btn btn-warning btn-sm me-1" onclick="editProp(${prop.id})">تعديل</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteProp(${index})">حذف</button>
                     </td>
-                </tr>
-                `;
+                </tr>`;
                 tbody.innerHTML += row;
             });
-        }
 
-        function deleteProp(index) {
-            if(confirm('هل أنت متأكد من حذف هذا العقار؟')) {
-                const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
-                properties.splice(index, 1);
-                localStorage.setItem('myProperties', JSON.stringify(properties));
-                loadTable();
-                if(editingId) resetFormState(); 
+            // تحميل الطلبات المعلقة
+            const pBody = document.getElementById('pendingTable');
+            pBody.innerHTML = '';
+            const pending = JSON.parse(localStorage.getItem('pendingProperties')) || [];
+            if(pending.length === 0) {
+                pBody.innerHTML = `<tr><td colspan="4" class="text-muted py-3">لا توجد طلبات جديدة حالياً</td></tr>`;
+            } else {
+                pending.forEach(prop => {
+                    const row = `
+                    <tr>
+                        <td class="fw-bold">${prop.title}</td>
+                        <td class="text-danger fw-bold dir-ltr">${prop.ownerPhone}</td>
+                        <td>${prop.city}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm me-1 fw-bold" onclick="reviewPending(${prop.id})"><i class="fas fa-check"></i> مراجعة وموافقة</button>
+                            <button class="btn btn-danger btn-sm" onclick="deletePending(${prop.id})"><i class="fas fa-times"></i></button>
+                        </td>
+                    </tr>`;
+                    pBody.innerHTML += row;
+                });
             }
         }
 
-        function clearAll() {
-            if(confirm('هل أنت متأكد من حذف كل العقارات؟')) {
-                localStorage.removeItem('myProperties');
-                loadTable();
-                if(editingId) resetFormState();
+        function deleteProp(index) {
+            if(confirm('هل أنت متأكد من حذف هذا العقار المنشور؟')) {
+                const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
+                properties.splice(index, 1);
+                localStorage.setItem('myProperties', JSON.stringify(properties));
+                loadTables();
+                if(editingId) resetFormState(); 
             }
         }
     </script>
