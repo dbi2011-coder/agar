@@ -10,6 +10,7 @@
         body { font-family: 'Tajawal', sans-serif; background-color: #f0f2f5; }
         .admin-container { max-width: 800px; margin: 50px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .login-container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #imagePreview { max-height: 150px; border-radius: 8px; object-fit: cover; }
     </style>
 </head>
 <body>
@@ -109,9 +110,12 @@
                         <label class="form-label">اسم الحي</label>
                         <input type="text" class="form-control" id="propDistrict" required>
                     </div>
+                    
                     <div class="col-md-6">
-                        <label class="form-label">رابط الصورة</label>
-                        <input type="url" class="form-control" id="propImage" placeholder="https://example.com/image.jpg" required>
+                        <label class="form-label">صورة العقار (من الجهاز)</label>
+                        <input type="file" class="form-control" id="propImageInput" accept="image/*">
+                        <div class="form-text text-success">سيتم ضغط الصورة تلقائياً للحفاظ على المساحة</div>
+                        <img id="imagePreview" src="" alt="معاينة الصورة" class="img-thumbnail mt-2 d-none w-100">
                     </div>
 
                     <div class="col-12">
@@ -132,6 +136,7 @@
                 <table class="table table-bordered text-center align-middle">
                     <thead class="table-light">
                         <tr>
+                            <th>الصورة</th>
                             <th>العنوان</th>
                             <th>السعر</th>
                             <th>المدينة</th>
@@ -150,7 +155,8 @@
         // --- نظام تسجيل الدخول ---
         const VALID_USERNAME = "admin";
         const VALID_PASSWORD = "12345";
-        let editingId = null; // متغير لحفظ آي دي العقار الجاري تعديله
+        let editingId = null; 
+        let currentImageData = ""; // متغير لحفظ بيانات الصورة المعالجة
 
         document.addEventListener('DOMContentLoaded', () => {
             if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
@@ -183,6 +189,52 @@
             location.reload();
         }
 
+        // --- نظام معالجة الصور (ضغط وتحويل إلى Base64) ---
+        document.getElementById('propImageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    // تصغير وضغط الصورة
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600;
+                    const MAX_HEIGHT = 600;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // حفظ الصورة بصيغة jpeg مضغوطة بنسبة 60%
+                    currentImageData = canvas.toDataURL('image/jpeg', 0.6);
+                    
+                    // عرض المعاينة
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = currentImageData;
+                    preview.classList.remove('d-none');
+                }
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
         // --- نظام إدارة العقارات ---
         function toggleCustomCity() {
             const citySelect = document.getElementById('propCity');
@@ -200,6 +252,12 @@
         document.getElementById('addPropertyForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
+            // التحقق من وجود صورة (مهم في حالة الإضافة الجديدة)
+            if (!currentImageData && !editingId) {
+                alert("الرجاء اختيار صورة للعقار من جهازك!");
+                return;
+            }
+
             let finalCity = document.getElementById('propCity').value;
             if (finalCity === 'other') {
                 finalCity = document.getElementById('customCity').value;
@@ -208,7 +266,6 @@
             let properties = JSON.parse(localStorage.getItem('myProperties')) || [];
 
             if (editingId) {
-                // وضع التعديل
                 const index = properties.findIndex(p => p.id === editingId);
                 if (index !== -1) {
                     properties[index].title = document.getElementById('propTitle').value;
@@ -217,13 +274,15 @@
                     properties[index].category = document.getElementById('propCategory').value;
                     properties[index].city = finalCity;
                     properties[index].district = document.getElementById('propDistrict').value;
-                    properties[index].image = document.getElementById('propImage').value;
                     properties[index].description = document.getElementById('propDesc').value;
+                    // تحديث الصورة فقط إذا اختار المسوق صورة جديدة
+                    if (currentImageData) {
+                        properties[index].image = currentImageData;
+                    }
                 }
                 alert('تم تحديث العقار بنجاح!');
                 resetFormState();
             } else {
-                // وضع الإضافة الجديد
                 const newProp = {
                     id: Date.now(),
                     title: document.getElementById('propTitle').value,
@@ -232,20 +291,26 @@
                     category: document.getElementById('propCategory').value,
                     city: finalCity,
                     district: document.getElementById('propDistrict').value,
-                    image: document.getElementById('propImage').value,
+                    image: currentImageData, // حفظ بيانات الصورة المضغوطة
                     description: document.getElementById('propDesc').value
                 };
-                properties.unshift(newProp);
-                alert('تم نشر العقار بنجاح!');
-                document.getElementById('addPropertyForm').reset();
-                toggleCustomCity();
+                
+                try {
+                    properties.unshift(newProp);
+                    localStorage.setItem('myProperties', JSON.stringify(properties));
+                    alert('تم نشر العقار بنجاح!');
+                    resetFormState();
+                } catch (error) {
+                    alert("عفواً، الذاكرة ممتلئة! يرجى حذف بعض العقارات القديمة لإضافة عقارات جديدة.");
+                }
             }
 
-            localStorage.setItem('myProperties', JSON.stringify(properties));
+            if(!editingId) {
+                localStorage.setItem('myProperties', JSON.stringify(properties));
+            }
             loadTable();
         });
 
-        // دالة جلب العقار للتعديل
         function editProp(id) {
             const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
             const prop = properties.find(p => p.id === id);
@@ -256,7 +321,6 @@
             document.getElementById('propType').value = prop.type;
             document.getElementById('propCategory').value = prop.category;
             
-            // التعامل مع المدينة
             const citySelect = document.getElementById('propCity');
             const isStandard = Array.from(citySelect.options).some(opt => opt.value === prop.city && opt.value !== 'other');
             if (isStandard) {
@@ -269,25 +333,36 @@
             }
 
             document.getElementById('propDistrict').value = prop.district;
-            document.getElementById('propImage').value = prop.image;
             document.getElementById('propDesc').value = prop.description;
 
-            // تغيير شكل النموذج ليكون وضع التحديث
+            // عرض الصورة الحالية
+            currentImageData = prop.image;
+            const preview = document.getElementById('imagePreview');
+            preview.src = currentImageData;
+            preview.classList.remove('d-none');
+            
+            // تفريغ حقل رفع الصورة الجديد (حتى لا يتم إجباره على الرفع مجدداً)
+            document.getElementById('propImageInput').value = ""; 
+
             editingId = id;
             document.getElementById('formTitle').textContent = 'تعديل العقار';
             const btn = document.getElementById('submitBtn');
             btn.textContent = 'حفظ التعديلات';
             btn.classList.replace('btn-success', 'btn-warning');
 
-            // رفع الشاشة لأعلى ليتمكن المسوق من التعديل
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // دالة إعادة النموذج لوضع الإضافة الأساسي
         function resetFormState() {
             editingId = null;
+            currentImageData = "";
             document.getElementById('addPropertyForm').reset();
             document.getElementById('formTitle').textContent = 'إضافة عقار جديد';
+            
+            const preview = document.getElementById('imagePreview');
+            preview.src = "";
+            preview.classList.add('d-none');
+
             const btn = document.getElementById('submitBtn');
             btn.textContent = 'حفظ ونشر العقار';
             btn.classList.replace('btn-warning', 'btn-success');
@@ -302,6 +377,7 @@
             properties.forEach((prop, index) => {
                 const row = `
                 <tr>
+                    <td><img src="${prop.image}" width="50" height="50" style="object-fit:cover; border-radius:5px;"></td>
                     <td>${prop.title}</td>
                     <td>${Number(prop.price).toLocaleString()} ر.س</td>
                     <td>${prop.city}</td>
@@ -322,7 +398,6 @@
                 localStorage.setItem('myProperties', JSON.stringify(properties));
                 loadTable();
                 
-                // إذا كان يحذف العقار وهو يقوم بتعديله حاليا
                 if(editingId) resetFormState(); 
             }
         }
