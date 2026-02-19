@@ -26,27 +26,83 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand fw-bold" href="#">بوابة العقار</a>
-            <div class="d-flex">
-                <a href="admin.html" class="btn btn-outline-warning btn-sm">دخول المسوق (الإدارة)</a>
+            <div class="d-flex gap-2">
+                <button class="btn btn-success btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#submitPropertyModal"><i class="fas fa-plus-circle"></i> اعرض عقارك معنا</button>
+                <a href="admin.html" class="btn btn-outline-warning btn-sm">دخول المسوق</a>
             </div>
         </div>
     </nav>
+
+    <div class="modal fade" id="submitPropertyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold">أرسل عقارك للتسويق</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="visitorPropertyForm">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">عنوان العقار باختصار</label>
+                                <input type="text" class="form-control" id="vTitle" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">السعر المطلوب (ر.س)</label>
+                                <input type="number" class="form-control" id="vPrice" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">رقم الجوال للتواصل (لن يظهر للعامة)</label>
+                                <input type="tel" class="form-control border-danger" id="vPhone" placeholder="05xxxxxxxx" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">نوع العرض</label>
+                                <select class="form-select" id="vType">
+                                    <option value="sale">بيع</option><option value="rent">إيجار</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">نوع العقار</label>
+                                <select class="form-select" id="vCategory" required>
+                                    <option value="فيلا">فيلا</option><option value="شقة">شقة</option><option value="أرض سكنية">أرض سكنية</option><option value="عمارة">عمارة</option><option value="أخرى">أخرى...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">المدينة</label>
+                                <input type="text" class="form-control" id="vCity" required placeholder="الرياض، جدة، الخ..">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">الحي</label>
+                                <input type="text" class="form-control" id="vDistrict" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">صور العقار</label>
+                                <input type="file" class="form-control" id="vImageInput" accept="image/*" multiple required>
+                                <div class="form-text">سيتم إرفاق الصور لتتم مراجعتها من قبل الإدارة</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">الوصف والتفاصيل</label>
+                                <textarea class="form-control" id="vDesc" rows="3" required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success w-100 fw-bold py-2">إرسال الطلب للإدارة</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="mainCarousel" class="carousel slide hero-slider" data-bs-ride="carousel">
         <div class="carousel-inner" id="sliderContainer">
             <div class="carousel-item active">
                 <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80" class="d-block w-100" alt="عقار">
-                <div class="carousel-caption d-none d-md-block">
-                    <h2>ابحث عن منزلك المثالي</h2>
-                    <p>أفضل العروض العقارية الحصرية</p>
-                </div>
+                <div class="carousel-caption d-none d-md-block"><h2>ابحث عن منزلك المثالي</h2></div>
             </div>
             <div class="carousel-item">
                 <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80" class="d-block w-100" alt="استثمار">
-                <div class="carousel-caption d-none d-md-block">
-                    <h2>فرص استثمارية مميزة</h2>
-                    <p>أراضي وعمائر بعوائد مجزية</p>
-                </div>
+                <div class="carousel-caption d-none d-md-block"><h2>فرص استثمارية مميزة</h2></div>
             </div>
         </div>
     </div>
@@ -57,76 +113,26 @@
                 <div class="col-md-2">
                     <label class="form-label fw-bold">نوع العرض</label>
                     <select class="form-select" id="filterType">
-                        <option value="all">الكل</option>
-                        <option value="sale">بيع</option>
-                        <option value="rent">إيجار</option>
+                        <option value="all">الكل</option><option value="sale">بيع</option><option value="rent">إيجار</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">نوع العقار</label>
                     <select class="form-select" id="filterCategory">
-                        <option value="all">كل العقارات</option>
-                        <optgroup label="عقارات سكنية">
-                            <option value="فيلا">فيلا</option>
-                            <option value="شقة">شقة</option>
-                            <option value="دور">دور</option>
-                            <option value="ملحق">ملحق</option>
-                            <option value="عمارة">عمارة</option>
-                            <option value="قصر">قصر</option>
-                            <option value="بيت شعبي">بيت شعبي</option>
-                        </optgroup>
-                        <optgroup label="عقارات تجارية">
-                            <option value="محل">محل</option>
-                            <option value="مكتب">مكتب</option>
-                            <option value="معرض">معرض</option>
-                            <option value="مستودع">مستودع</option>
-                            <option value="مجمع تجاري">مجمع تجاري</option>
-                        </optgroup>
-                        <optgroup label="أراضي ومزارع">
-                            <option value="أرض سكنية">أرض سكنية</option>
-                            <option value="أرض تجارية">أرض تجارية</option>
-                            <option value="أرض زراعية">أرض زراعية</option>
-                            <option value="مزرعة">مزرعة</option>
-                            <option value="استراحة / شاليه">استراحة / شاليه</option>
-                        </optgroup>
+                        <option value="all">الكل</option>
+                        <option value="فيلا">فيلا</option><option value="شقة">شقة</option><option value="دور">دور</option><option value="عمارة">عمارة</option><option value="محل">محل</option><option value="أرض سكنية">أرض سكنية</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">المدينة</label>
-                    <select class="form-select" id="filterCity" onchange="toggleFilterCustomCity()">
+                    <select class="form-select" id="filterCity">
                         <option value="all">كل المدن</option>
-                        <option value="الرياض">الرياض</option>
-                        <option value="مكة المكرمة">مكة المكرمة</option>
-                        <option value="المدينة المنورة">المدينة المنورة</option>
-                        <option value="جدة">جدة</option>
-                        <option value="الدمام">الدمام</option>
-                        <option value="الخبر">الخبر</option>
-                        <option value="الظهران">الظهران</option>
-                        <option value="الأحساء">الأحساء</option>
-                        <option value="القطيف">القطيف</option>
-                        <option value="الجبيل">الجبيل</option>
-                        <option value="الطائف">الطائف</option>
-                        <option value="تبوك">تبوك</option>
-                        <option value="بريدة">بريدة</option>
-                        <option value="عنيزة">عنيزة</option>
-                        <option value="حائل">حائل</option>
-                        <option value="أبها">أبها</option>
-                        <option value="خميس مشيط">خميس مشيط</option>
-                        <option value="جازان">جازان</option>
-                        <option value="نجران">نجران</option>
-                        <option value="الباحة">الباحة</option>
-                        <option value="عرعر">عرعر</option>
-                        <option value="سكاكا">سكاكا</option>
-                        <option value="ينبع">ينبع</option>
-                        <option value="حفر الباطن">حفر الباطن</option>
-                        <option value="الخرج">الخرج</option>
-                        <option value="other" class="fw-bold text-primary">مدينة أخرى (بحث)...</option>
+                        <option value="الرياض">الرياض</option><option value="مكة المكرمة">مكة المكرمة</option><option value="المدينة المنورة">المدينة المنورة</option><option value="جدة">جدة</option><option value="الدمام">الدمام</option>
                     </select>
-                    <input type="text" class="form-control mt-2 d-none" id="filterCustomCity" placeholder="اكتب اسم المدينة...">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-bold">الحي / الوصف</label>
-                    <input type="text" class="form-control" id="filterText" placeholder="اكتب للبحث...">
+                    <label class="form-label fw-bold">بحث</label>
+                    <input type="text" class="form-control" id="filterText" placeholder="اكتب حي أو وصف...">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">السعر الأعلى</label>
@@ -148,13 +154,65 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => loadProperties());
 
-        function toggleFilterCustomCity() {
-            const citySelect = document.getElementById('filterCity');
-            const customInput = document.getElementById('filterCustomCity');
-            if (citySelect.value === 'other') { customInput.classList.remove('d-none'); } 
-            else { customInput.classList.add('d-none'); customInput.value = ''; }
+        // --- نظام تقديم طلب من الزائر ---
+        let visitorImagesData = [];
+        
+        document.getElementById('vImageInput').addEventListener('change', async function(e) {
+            const files = Array.from(e.target.files);
+            visitorImagesData = [];
+            for (let file of files) {
+                let dataUrl = await compressImageVisitor(file);
+                visitorImagesData.push(dataUrl);
+            }
+        });
+
+        function compressImageVisitor(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width, height = img.height;
+                        if (width > 800) { height *= 800 / width; width = 800; }
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.5)); 
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
+        document.getElementById('visitorPropertyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const pendingProp = {
+                id: Date.now(),
+                title: document.getElementById('vTitle').value,
+                price: document.getElementById('vPrice').value,
+                ownerPhone: document.getElementById('vPhone').value,
+                type: document.getElementById('vType').value,
+                category: document.getElementById('vCategory').value,
+                city: document.getElementById('vCity').value,
+                district: document.getElementById('vDistrict').value,
+                description: document.getElementById('vDesc').value,
+                images: visitorImagesData
+            };
+
+            let pendingProperties = JSON.parse(localStorage.getItem('pendingProperties')) || [];
+            pendingProperties.unshift(pendingProp);
+            localStorage.setItem('pendingProperties', JSON.stringify(pendingProperties));
+
+            alert("تم استلام طلبك بنجاح! سيقوم فريقنا بمراجعته والتواصل معك قريباً.");
+            
+            // إغلاق النافذة وتفريغ الحقول
+            document.getElementById('visitorPropertyForm').reset();
+            var modal = bootstrap.Modal.getInstance(document.getElementById('submitPropertyModal'));
+            modal.hide();
+        });
+
+        // --- نظام العرض ---
         function loadProperties(filteredData = null) {
             const container = document.getElementById('propertiesContainer');
             container.innerHTML = '';
@@ -162,17 +220,14 @@
             if (filteredData) properties = filteredData;
 
             if (properties.length === 0) {
-                container.innerHTML = '<div class="col-12 text-center text-muted py-5"><h5>لا توجد عقارات تطابق بحثك</h5></div>';
+                container.innerHTML = '<div class="col-12 text-center text-muted py-5"><h5>لا توجد عقارات</h5></div>';
                 return;
             }
 
             properties.forEach(prop => {
                 const badgeClass = prop.type === 'sale' ? 'badge-sale' : 'badge-rent';
                 const typeText = prop.type === 'sale' ? 'بيع' : 'إيجار';
-                
                 let coverImg = Array.isArray(prop.images) ? prop.images[0] : prop.image;
-                
-                // توافقية مع الأنواع القديمة في حال وجودها
                 const categoryMap = { 'villa': 'فيلا', 'apartment': 'شقة', 'land': 'أرض' };
                 const displayCategory = categoryMap[prop.category] || prop.category;
 
@@ -211,21 +266,13 @@
             const category = document.getElementById('filterCategory').value;
             const text = document.getElementById('filterText').value.toLowerCase();
             const max = document.getElementById('maxPrice').value;
-            
             let citySelectValue = document.getElementById('filterCity').value;
-            let customCityText = document.getElementById('filterCustomCity').value.trim();
 
             const filtered = properties.filter(p => {
                 let match = true;
                 if (type !== 'all' && p.type !== type) match = false;
                 if (category !== 'all' && p.category !== category) match = false;
-                
-                if (citySelectValue === 'other') {
-                    if (customCityText && !p.city.includes(customCityText)) match = false;
-                } else if (citySelectValue !== 'all') {
-                    if (p.city !== citySelectValue) match = false;
-                }
-
+                if (citySelectValue !== 'all' && p.city !== citySelectValue) match = false;
                 if (text && !p.district.includes(text) && !p.description.includes(text)) match = false;
                 if (max && Number(p.price) > Number(max)) match = false;
                 return match;
