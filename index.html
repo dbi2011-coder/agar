@@ -3,281 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة العقار | الصفحة الرئيسية</title>
+    <title>تفاصيل العقار</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #f4f6f9; }
-        .hero-slider .carousel-item { height: 500px; background-color: #000; }
-        .hero-slider img { object-fit: cover; height: 100%; opacity: 0.7; }
-        .carousel-caption { bottom: 20%; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 10px; }
-        .search-box { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); margin-top: -80px; position: relative; z-index: 10; }
-        .property-card { border: none; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: 0.3s; background: #fff; display: flex; flex-direction: column;}
-        .property-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
-        .badge-sale { background-color: #dc3545; }
-        .badge-rent { background-color: #198754; }
-        .card-img-top { height: 220px; object-fit: cover; }
-        .price-text { color: #0d6efd; font-weight: bold; font-size: 1.2rem; }
+        body { font-family: 'Tajawal', sans-serif; background-color: #f8f9fa; }
+        .details-container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-top: 30px; margin-bottom: 50px;}
+        .carousel-item img { height: 500px; object-fit: cover; border-radius: 10px; }
+        .price-badge { background: #0d6efd; color: white; padding: 10px 20px; border-radius: 8px; font-size: 1.5rem; font-weight: bold; }
+        .info-box { background: #f4f6f9; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-right: 4px solid #0d6efd; }
+        .commission-box { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; font-weight: bold; border-right: 4px solid #ffc107; }
+        
+        @media print {
+            body { background: white; margin: 0; padding: 0; }
+            .no-print { display: none !important; }
+            .details-container { box-shadow: none; margin-top: 0; }
+            .carousel-control-prev, .carousel-control-next, .carousel-indicators { display: none !important; }
+            .carousel-item img { height: 400px; page-break-inside: avoid; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-dark bg-dark no-print">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">بوابة العقار</a>
+            <a class="navbar-brand fw-bold" href="index.html"><i class="fas fa-home me-2"></i> بوابة العقار</a>
             <div class="d-flex gap-2">
-                <button class="btn btn-success btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#submitPropertyModal"><i class="fas fa-plus-circle"></i> اعرض عقارك معنا</button>
-                <a href="admin.html" class="btn btn-outline-warning btn-sm">دخول المسوق</a>
+                <button onclick="shareProperty()" class="btn btn-primary btn-sm fw-bold"><i class="fas fa-share-alt me-1"></i> مشاركة العقار</button>
+                <button onclick="window.print()" class="btn btn-light btn-sm fw-bold"><i class="fas fa-print me-1"></i> طباعة</button>
             </div>
         </div>
     </nav>
 
-    <div class="modal fade" id="submitPropertyModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title fw-bold">أرسل عقارك للتسويق</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="visitorPropertyForm">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">عنوان العقار باختصار</label>
-                                <input type="text" class="form-control" id="vTitle" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">السعر المطلوب (ر.س)</label>
-                                <input type="number" class="form-control" id="vPrice" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">رقم الجوال للتواصل (لن يظهر للعامة)</label>
-                                <input type="tel" class="form-control border-danger" id="vPhone" placeholder="05xxxxxxxx" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">نوع العرض</label>
-                                <select class="form-select" id="vType">
-                                    <option value="sale">بيع</option><option value="rent">إيجار</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">نوع العقار</label>
-                                <select class="form-select" id="vCategory" required>
-                                    <option value="فيلا">فيلا</option><option value="شقة">شقة</option><option value="أرض سكنية">أرض سكنية</option><option value="عمارة">عمارة</option><option value="أخرى">أخرى...</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">المدينة</label>
-                                <input type="text" class="form-control" id="vCity" required placeholder="الرياض، جدة، الخ..">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">الحي</label>
-                                <input type="text" class="form-control" id="vDistrict" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">صور العقار</label>
-                                <input type="file" class="form-control" id="vImageInput" accept="image/*" multiple required>
-                                <div class="form-text">سيتم إرفاق الصور لتتم مراجعتها من قبل الإدارة</div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">الوصف والتفاصيل</label>
-                                <textarea class="form-control" id="vDesc" rows="3" required></textarea>
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-success w-100 fw-bold py-2">إرسال الطلب للإدارة</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="mainCarousel" class="carousel slide hero-slider" data-bs-ride="carousel">
-        <div class="carousel-inner" id="sliderContainer">
-            <div class="carousel-item active">
-                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=80" class="d-block w-100" alt="عقار">
-                <div class="carousel-caption d-none d-md-block"><h2>ابحث عن منزلك المثالي</h2></div>
-            </div>
-            <div class="carousel-item">
-                <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80" class="d-block w-100" alt="استثمار">
-                <div class="carousel-caption d-none d-md-block"><h2>فرص استثمارية مميزة</h2></div>
-            </div>
-        </div>
-    </div>
-
     <div class="container">
-        <div class="search-box">
-            <form id="filterForm" class="row g-3">
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">نوع العرض</label>
-                    <select class="form-select" id="filterType">
-                        <option value="all">الكل</option><option value="sale">بيع</option><option value="rent">إيجار</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">نوع العقار</label>
-                    <select class="form-select" id="filterCategory">
-                        <option value="all">الكل</option>
-                        <option value="فيلا">فيلا</option><option value="شقة">شقة</option><option value="دور">دور</option><option value="عمارة">عمارة</option><option value="محل">محل</option><option value="أرض سكنية">أرض سكنية</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">المدينة</label>
-                    <select class="form-select" id="filterCity">
-                        <option value="all">كل المدن</option>
-                        <option value="الرياض">الرياض</option><option value="مكة المكرمة">مكة المكرمة</option><option value="المدينة المنورة">المدينة المنورة</option><option value="جدة">جدة</option><option value="الدمام">الدمام</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">بحث</label>
-                    <input type="text" class="form-control" id="filterText" placeholder="اكتب حي أو وصف...">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">السعر الأعلى</label>
-                    <input type="number" class="form-control" id="maxPrice" placeholder="الحد الأقصى">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" onclick="applyFilter()" class="btn btn-primary w-100 fw-bold">بحث</button>
-                </div>
-            </form>
+        <div class="details-container" id="propertyDetails">
+            <div class="text-center py-5">جاري تحميل البيانات...</div>
         </div>
-    </div>
-
-    <div class="container py-5">
-        <h3 class="fw-bold mb-4 border-bottom pb-2">أحدث العقارات المضافة</h3>
-        <div class="row g-4" id="propertiesContainer"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => loadProperties());
+        let currentPropData = null; // للاحتفاظ بالبيانات من أجل المشاركة
 
-        // --- نظام تقديم طلب من الزائر ---
-        let visitorImagesData = [];
-        
-        document.getElementById('vImageInput').addEventListener('change', async function(e) {
-            const files = Array.from(e.target.files);
-            visitorImagesData = [];
-            for (let file of files) {
-                let dataUrl = await compressImageVisitor(file);
-                visitorImagesData.push(dataUrl);
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const propId = urlParams.get('id');
+
+            if (!propId) {
+                document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، لم يتم العثور على العقار!</div>'; return;
             }
-        });
 
-        function compressImageVisitor(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width, height = img.height;
-                        if (width > 800) { height *= 800 / width; width = 800; }
-                        canvas.width = width; canvas.height = height;
-                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.5)); 
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
+            const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
+            currentPropData = properties.find(p => p.id === Number(propId));
 
-        document.getElementById('visitorPropertyForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const pendingProp = {
-                id: Date.now(),
-                title: document.getElementById('vTitle').value,
-                price: document.getElementById('vPrice').value,
-                ownerPhone: document.getElementById('vPhone').value,
-                type: document.getElementById('vType').value,
-                category: document.getElementById('vCategory').value,
-                city: document.getElementById('vCity').value,
-                district: document.getElementById('vDistrict').value,
-                description: document.getElementById('vDesc').value,
-                images: visitorImagesData
-            };
+            if (!currentPropData) {
+                document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، هذا العقار غير موجود!</div>'; return;
+            }
 
-            let pendingProperties = JSON.parse(localStorage.getItem('pendingProperties')) || [];
-            pendingProperties.unshift(pendingProp);
-            localStorage.setItem('pendingProperties', JSON.stringify(pendingProperties));
-
-            alert("تم استلام طلبك بنجاح! سيقوم فريقنا بمراجعته والتواصل معك قريباً.");
+            let imagesArray = Array.isArray(currentPropData.images) ? currentPropData.images : (currentPropData.image ? [currentPropData.image] : []);
+            let indicatorsHTML = ''; let innerHTML = '';
             
-            // إغلاق النافذة وتفريغ الحقول
-            document.getElementById('visitorPropertyForm').reset();
-            var modal = bootstrap.Modal.getInstance(document.getElementById('submitPropertyModal'));
-            modal.hide();
-        });
+            imagesArray.forEach((imgSrc, index) => {
+                let activeClass = index === 0 ? 'active' : '';
+                indicatorsHTML += `<button type="button" data-bs-target="#propertyCarousel" data-bs-slide-to="${index}" class="${activeClass}"></button>`;
+                innerHTML += `<div class="carousel-item ${activeClass}"><img src="${imgSrc}" class="d-block w-100" alt="صورة العقار"></div>`;
+            });
 
-        // --- نظام العرض ---
-        function loadProperties(filteredData = null) {
-            const container = document.getElementById('propertiesContainer');
-            container.innerHTML = '';
-            let properties = JSON.parse(localStorage.getItem('myProperties')) || [];
-            if (filteredData) properties = filteredData;
+            const typeText = currentPropData.type === 'sale' ? 'للبيع' : 'للإيجار';
+            const categoryMap = { 'villa': 'فيلا', 'apartment': 'شقة', 'land': 'أرض' };
+            const categoryText = categoryMap[currentPropData.category] || currentPropData.category;
+            const commissionValue = (Number(currentPropData.price) * 0.025).toLocaleString();
 
-            if (properties.length === 0) {
-                container.innerHTML = '<div class="col-12 text-center text-muted py-5"><h5>لا توجد عقارات</h5></div>';
-                return;
-            }
-
-            properties.forEach(prop => {
-                const badgeClass = prop.type === 'sale' ? 'badge-sale' : 'badge-rent';
-                const typeText = prop.type === 'sale' ? 'بيع' : 'إيجار';
-                let coverImg = Array.isArray(prop.images) ? prop.images[0] : prop.image;
-                const categoryMap = { 'villa': 'فيلا', 'apartment': 'شقة', 'land': 'أرض' };
-                const displayCategory = categoryMap[prop.category] || prop.category;
-
-                const cardHTML = `
-                <div class="col-md-4 d-flex align-items-stretch">
-                    <div class="card property-card w-100">
-                        <div class="position-relative">
-                            <span class="badge ${badgeClass} position-absolute top-0 start-0 m-3 py-2 px-3">${typeText}</span>
-                            <img src="${coverImg}" class="card-img-top" alt="عقار">
+            const detailsHTML = `
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div id="propertyCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+                            <div class="carousel-indicators">${indicatorsHTML}</div>
+                            <div class="carousel-inner">${innerHTML}</div>
+                            ${imagesArray.length > 1 ? `
+                            <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>` : ''}
                         </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title fw-bold">${prop.title}</h5>
-                            <p class="text-muted small mb-2"><i class="fas fa-map-marker-alt text-danger"></i> ${prop.city} - ${prop.district}</p>
-                            <p class="card-text text-truncate mb-3">${prop.description}</p>
-                            
-                            <div class="mt-auto border-top pt-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="price-text">${Number(prop.price).toLocaleString()} ر.س</span>
-                                </div>
-                                <a href="details.html?id=${prop.id}" class="btn btn-primary w-100 fw-bold">استعراض التفاصيل <i class="fas fa-arrow-left me-1"></i></a>
+
+                        <h2 class="fw-bold mb-3">${currentPropData.title}</h2>
+                        <p class="text-muted fs-5"><i class="fas fa-map-marker-alt text-danger me-2"></i> ${currentPropData.city} - حي ${currentPropData.district}</p>
+                        
+                        <h4 class="fw-bold mt-4 border-bottom pb-2">التفاصيل والوصف</h4>
+                        <p class="fs-5" style="white-space: pre-wrap; line-height: 1.8;">${currentPropData.description}</p>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="sticky-top" style="top: 20px;">
+                            <div class="text-center mb-4">
+                                <div class="price-badge d-inline-block w-100">${Number(currentPropData.price).toLocaleString()} ريال سعودي</div>
                             </div>
-                        </div>
-                        <div class="card-footer bg-light text-muted small border-top-0">
-                            <i class="fas fa-home text-primary"></i> ${displayCategory}
+                            
+                            <div class="info-box"><strong><i class="fas fa-home text-primary me-2"></i> نوع العقار:</strong> ${categoryText}</div>
+                            <div class="info-box"><strong><i class="fas fa-tags text-primary me-2"></i> العرض:</strong> ${typeText}</div>
+                            <div class="info-box border-success"><strong><i class="fas fa-hashtag text-success me-2"></i> رقم الإعلان:</strong> ${currentPropData.id}</div>
+                            
+                            <div class="commission-box my-3">
+                                <i class="fas fa-hand-holding-usd me-2"></i> عمولة السعي (2.5%): ${commissionValue} ر.س
+                            </div>
+
+                            <a href="https://wa.me/966500000000?text=السلام عليكم، أستفسر عن الإعلان رقم: ${currentPropData.id}%0Aالعنوان: ${currentPropData.title}" class="btn btn-success w-100 btn-lg fw-bold no-print mt-3">
+                                <i class="fab fa-whatsapp me-2"></i> تواصل عبر الواتساب
+                            </a>
+                            <button onclick="shareProperty()" class="btn btn-outline-primary w-100 mt-2 fw-bold no-print">
+                                <i class="fas fa-share-alt me-2"></i> مشاركة الإعلان
+                            </button>
                         </div>
                     </div>
                 </div>
-                `;
-                container.innerHTML += cardHTML;
-            });
-        }
+            `;
+            document.getElementById('propertyDetails').innerHTML = detailsHTML;
+        });
 
-        function applyFilter() {
-            let properties = JSON.parse(localStorage.getItem('myProperties')) || [];
-            const type = document.getElementById('filterType').value;
-            const category = document.getElementById('filterCategory').value;
-            const text = document.getElementById('filterText').value.toLowerCase();
-            const max = document.getElementById('maxPrice').value;
-            let citySelectValue = document.getElementById('filterCity').value;
+        // --- نظام المشاركة ---
+        function shareProperty() {
+            if (!currentPropData) return;
+            
+            const shareTitle = `فرصة عقارية: ${currentPropData.title}`;
+            const shareText = `شاهد هذا العقار الرائع في ${currentPropData.city} بسعر ${Number(currentPropData.price).toLocaleString()} ريال.`;
+            const shareUrl = window.location.href;
 
-            const filtered = properties.filter(p => {
-                let match = true;
-                if (type !== 'all' && p.type !== type) match = false;
-                if (category !== 'all' && p.category !== category) match = false;
-                if (citySelectValue !== 'all' && p.city !== citySelectValue) match = false;
-                if (text && !p.district.includes(text) && !p.description.includes(text)) match = false;
-                if (max && Number(p.price) > Number(max)) match = false;
-                return match;
-            });
-            loadProperties(filtered);
+            if (navigator.share) {
+                // استخدام نافذة المشاركة الأصلية للجوال
+                navigator.share({
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl
+                }).catch(console.error);
+            } else {
+                // للكمبيوتر والمتصفحات غير الداعمة: نسخ الرابط
+                navigator.clipboard.writeText(`${shareTitle}\n${shareText}\n${shareUrl}`).then(() => {
+                    alert("تم نسخ رابط العقار وتفاصيله، يمكنك لصقه وإرساله لأي شخص!");
+                });
+            }
         }
     </script>
 </body>
