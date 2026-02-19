@@ -10,7 +10,7 @@
         body { font-family: 'Tajawal', sans-serif; background-color: #f0f2f5; }
         .admin-container { max-width: 800px; margin: 50px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .login-container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        #imagePreview { max-height: 150px; border-radius: 8px; object-fit: cover; }
+        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin: 5px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -112,10 +112,10 @@
                     </div>
                     
                     <div class="col-md-6">
-                        <label class="form-label">صورة العقار (من الجهاز)</label>
-                        <input type="file" class="form-control" id="propImageInput" accept="image/*">
-                        <div class="form-text text-success">سيتم ضغط الصورة تلقائياً للحفاظ على المساحة</div>
-                        <img id="imagePreview" src="" alt="معاينة الصورة" class="img-thumbnail mt-2 d-none w-100">
+                        <label class="form-label">صور العقار (يمكنك تحديد عدة صور)</label>
+                        <input type="file" class="form-control" id="propImageInput" accept="image/*" multiple>
+                        <div class="form-text text-success">يُفضل ألا تتجاوز 4 صور للحفاظ على مساحة المتصفح</div>
+                        <div id="imagePreviewContainer" class="mt-2 d-flex flex-wrap"></div>
                     </div>
 
                     <div class="col-12">
@@ -136,7 +136,7 @@
                 <table class="table table-bordered text-center align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>الصورة</th>
+                            <th>الصورة الرئيسية</th>
                             <th>العنوان</th>
                             <th>السعر</th>
                             <th>المدينة</th>
@@ -152,11 +152,10 @@
     </div>
 
     <script>
-        // --- نظام تسجيل الدخول ---
         const VALID_USERNAME = "admin";
         const VALID_PASSWORD = "12345";
         let editingId = null; 
-        let currentImageData = ""; // متغير لحفظ بيانات الصورة المعالجة
+        let currentImagesData = []; // مصفوفة لحفظ عدة صور
 
         document.addEventListener('DOMContentLoaded', () => {
             if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
@@ -167,10 +166,7 @@
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const user = document.getElementById('usernameInput').value;
-            const pass = document.getElementById('passwordInput').value;
-
-            if (user === VALID_USERNAME && pass === VALID_PASSWORD) {
+            if (document.getElementById('usernameInput').value === VALID_USERNAME && document.getElementById('passwordInput').value === VALID_PASSWORD) {
                 sessionStorage.setItem('isAdminLoggedIn', 'true');
                 showAdminDashboard();
             } else {
@@ -184,84 +180,73 @@
             document.getElementById('logoutBtn').classList.remove('d-none');
         }
 
-        function logout() {
-            sessionStorage.removeItem('isAdminLoggedIn');
-            location.reload();
-        }
+        function logout() { sessionStorage.removeItem('isAdminLoggedIn'); location.reload(); }
 
-        // --- نظام معالجة الصور (ضغط وتحويل إلى Base64) ---
-        document.getElementById('propImageInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        // --- نظام ضغط ومعالجة عدة صور ---
+        document.getElementById('propImageInput').addEventListener('change', async function(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    // تصغير وضغط الصورة
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 600;
-                    const MAX_HEIGHT = 600;
-                    let width = img.width;
-                    let height = img.height;
+            // تفريغ السابق في حال الإضافة الجديدة
+            if(!editingId) currentImagesData = [];
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            if(!editingId) previewContainer.innerHTML = '';
 
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-                    canvas.width = width;
-                    canvas.height = height;
-                    
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // حفظ الصورة بصيغة jpeg مضغوطة بنسبة 60%
-                    currentImageData = canvas.toDataURL('image/jpeg', 0.6);
-                    
-                    // عرض المعاينة
-                    const preview = document.getElementById('imagePreview');
-                    preview.src = currentImageData;
-                    preview.classList.remove('d-none');
-                }
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
+            for (let file of files) {
+                let dataUrl = await compressImage(file);
+                currentImagesData.push(dataUrl);
+                
+                const imgElem = document.createElement('img');
+                imgElem.src = dataUrl;
+                imgElem.className = 'preview-img';
+                previewContainer.appendChild(imgElem);
+            }
         });
 
-        // --- نظام إدارة العقارات ---
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.5)); // جودة 50% لتقليل الحجم
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
         function toggleCustomCity() {
             const citySelect = document.getElementById('propCity');
             const customInput = document.getElementById('customCity');
-            if (citySelect.value === 'other') {
-                customInput.classList.remove('d-none');
-                customInput.required = true;
-            } else {
-                customInput.classList.add('d-none');
-                customInput.required = false;
-                customInput.value = ''; 
-            }
+            if (citySelect.value === 'other') { customInput.classList.remove('d-none'); customInput.required = true; } 
+            else { customInput.classList.add('d-none'); customInput.required = false; customInput.value = ''; }
         }
 
         document.getElementById('addPropertyForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // التحقق من وجود صورة (مهم في حالة الإضافة الجديدة)
-            if (!currentImageData && !editingId) {
-                alert("الرجاء اختيار صورة للعقار من جهازك!");
-                return;
+            if (currentImagesData.length === 0 && !editingId) {
+                alert("الرجاء اختيار صورة واحدة على الأقل للعقار!"); return;
             }
 
             let finalCity = document.getElementById('propCity').value;
-            if (finalCity === 'other') {
-                finalCity = document.getElementById('customCity').value;
-            }
+            if (finalCity === 'other') finalCity = document.getElementById('customCity').value;
 
             let properties = JSON.parse(localStorage.getItem('myProperties')) || [];
 
@@ -275,10 +260,7 @@
                     properties[index].city = finalCity;
                     properties[index].district = document.getElementById('propDistrict').value;
                     properties[index].description = document.getElementById('propDesc').value;
-                    // تحديث الصورة فقط إذا اختار المسوق صورة جديدة
-                    if (currentImageData) {
-                        properties[index].image = currentImageData;
-                    }
+                    if (currentImagesData.length > 0) properties[index].images = currentImagesData;
                 }
                 alert('تم تحديث العقار بنجاح!');
                 resetFormState();
@@ -291,23 +273,18 @@
                     category: document.getElementById('propCategory').value,
                     city: finalCity,
                     district: document.getElementById('propDistrict').value,
-                    image: currentImageData, // حفظ بيانات الصورة المضغوطة
+                    images: currentImagesData, // حفظ مصفوفة الصور
                     description: document.getElementById('propDesc').value
                 };
-                
                 try {
                     properties.unshift(newProp);
                     localStorage.setItem('myProperties', JSON.stringify(properties));
                     alert('تم نشر العقار بنجاح!');
                     resetFormState();
-                } catch (error) {
-                    alert("عفواً، الذاكرة ممتلئة! يرجى حذف بعض العقارات القديمة لإضافة عقارات جديدة.");
-                }
+                } catch (error) { alert("عفواً، الذاكرة ممتلئة! يرجى حذف بعض العقارات القديمة."); }
             }
 
-            if(!editingId) {
-                localStorage.setItem('myProperties', JSON.stringify(properties));
-            }
+            if(!editingId) localStorage.setItem('myProperties', JSON.stringify(properties));
             loadTable();
         });
 
@@ -322,26 +299,30 @@
             document.getElementById('propCategory').value = prop.category;
             
             const citySelect = document.getElementById('propCity');
-            const isStandard = Array.from(citySelect.options).some(opt => opt.value === prop.city && opt.value !== 'other');
-            if (isStandard) {
+            if (Array.from(citySelect.options).some(opt => opt.value === prop.city && opt.value !== 'other')) {
                 citySelect.value = prop.city;
-                toggleCustomCity();
             } else {
-                citySelect.value = 'other';
-                toggleCustomCity();
-                document.getElementById('customCity').value = prop.city;
+                citySelect.value = 'other'; document.getElementById('customCity').value = prop.city;
             }
+            toggleCustomCity();
 
             document.getElementById('propDistrict').value = prop.district;
             document.getElementById('propDesc').value = prop.description;
 
-            // عرض الصورة الحالية
-            currentImageData = prop.image;
-            const preview = document.getElementById('imagePreview');
-            preview.src = currentImageData;
-            preview.classList.remove('d-none');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            previewContainer.innerHTML = '';
             
-            // تفريغ حقل رفع الصورة الجديد (حتى لا يتم إجباره على الرفع مجدداً)
+            // التوافقية مع العقارات القديمة التي لها صورة واحدة
+            let imagesArray = Array.isArray(prop.images) ? prop.images : (prop.image ? [prop.image] : []);
+            currentImagesData = imagesArray;
+
+            imagesArray.forEach(imgData => {
+                const imgElem = document.createElement('img');
+                imgElem.src = imgData;
+                imgElem.className = 'preview-img';
+                previewContainer.appendChild(imgElem);
+            });
+            
             document.getElementById('propImageInput').value = ""; 
 
             editingId = id;
@@ -349,20 +330,15 @@
             const btn = document.getElementById('submitBtn');
             btn.textContent = 'حفظ التعديلات';
             btn.classList.replace('btn-success', 'btn-warning');
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function resetFormState() {
             editingId = null;
-            currentImageData = "";
+            currentImagesData = [];
             document.getElementById('addPropertyForm').reset();
             document.getElementById('formTitle').textContent = 'إضافة عقار جديد';
-            
-            const preview = document.getElementById('imagePreview');
-            preview.src = "";
-            preview.classList.add('d-none');
-
+            document.getElementById('imagePreviewContainer').innerHTML = '';
             const btn = document.getElementById('submitBtn');
             btn.textContent = 'حفظ ونشر العقار';
             btn.classList.replace('btn-warning', 'btn-success');
@@ -375,9 +351,11 @@
             const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
 
             properties.forEach((prop, index) => {
+                // التوافقية مع القديم والجديد
+                let coverImg = Array.isArray(prop.images) ? prop.images[0] : prop.image;
                 const row = `
                 <tr>
-                    <td><img src="${prop.image}" width="50" height="50" style="object-fit:cover; border-radius:5px;"></td>
+                    <td><img src="${coverImg}" width="50" height="50" style="object-fit:cover; border-radius:5px;"></td>
                     <td>${prop.title}</td>
                     <td>${Number(prop.price).toLocaleString()} ر.س</td>
                     <td>${prop.city}</td>
@@ -397,7 +375,6 @@
                 properties.splice(index, 1);
                 localStorage.setItem('myProperties', JSON.stringify(properties));
                 loadTable();
-                
                 if(editingId) resetFormState(); 
             }
         }
