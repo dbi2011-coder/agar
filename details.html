@@ -29,8 +29,11 @@
 
     <nav class="navbar navbar-dark bg-dark no-print">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html"><i class="fas fa-home me-2"></i> بوابة العقار</a>
-            <button onclick="window.print()" class="btn btn-light btn-sm fw-bold"><i class="fas fa-print me-1"></i> طباعة الإعلان</button>
+            <button onclick="window.location.href='index.html';" class="btn btn-link text-white text-decoration-none navbar-brand fw-bold p-0"><i class="fas fa-home me-2"></i> بوابة العقار</button>
+            <div class="d-flex gap-2">
+                <button onclick="shareProperty()" class="btn btn-primary btn-sm fw-bold"><i class="fas fa-share-alt me-1"></i> مشاركة العقار</button>
+                <button onclick="window.print()" class="btn btn-light btn-sm fw-bold"><i class="fas fa-print me-1"></i> طباعة</button>
+            </div>
         </div>
     </nav>
 
@@ -42,101 +45,101 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        let currentPropData = null; 
+
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const propId = urlParams.get('id');
 
             if (!propId) {
-                document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، لم يتم العثور على العقار!</div>';
-                return;
+                document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، لم يتم العثور على العقار!</div>'; return;
             }
 
             const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
-            const prop = properties.find(p => p.id === Number(propId));
+            currentPropData = properties.find(p => p.id === Number(propId));
 
-            if (!prop) {
-                document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، هذا العقار غير موجود أو تم حذفه!</div>';
-                return;
+            if (!currentPropData) {
+                document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، هذا العقار غير موجود!</div>'; return;
             }
 
-            let imagesArray = Array.isArray(prop.images) ? prop.images : (prop.image ? [prop.image] : []);
-            let indicatorsHTML = '';
-            let innerHTML = '';
+            let imagesArray = Array.isArray(currentPropData.images) ? currentPropData.images : (currentPropData.image ? [currentPropData.image] : []);
+            let indicatorsHTML = ''; let innerHTML = '';
             
             imagesArray.forEach((imgSrc, index) => {
                 let activeClass = index === 0 ? 'active' : '';
                 indicatorsHTML += `<button type="button" data-bs-target="#propertyCarousel" data-bs-slide-to="${index}" class="${activeClass}"></button>`;
-                innerHTML += `
-                    <div class="carousel-item ${activeClass}">
-                        <img src="${imgSrc}" class="d-block w-100" alt="صورة العقار">
-                    </div>
-                `;
+                innerHTML += `<div class="carousel-item ${activeClass}"><img src="${imgSrc}" class="d-block w-100" alt="صورة العقار"></div>`;
             });
 
-            const typeText = prop.type === 'sale' ? 'للبيع' : 'للإيجار';
+            const typeText = currentPropData.type === 'sale' ? 'للبيع' : 'للإيجار';
             const categoryMap = { 'villa': 'فيلا', 'apartment': 'شقة', 'land': 'أرض' };
-            const categoryText = categoryMap[prop.category] || prop.category;
-            const commissionValue = (Number(prop.price) * 0.025).toLocaleString();
+            const categoryText = categoryMap[currentPropData.category] || currentPropData.category;
+            const commissionValue = (Number(currentPropData.price) * 0.025).toLocaleString();
 
             const detailsHTML = `
                 <div class="row">
                     <div class="col-lg-8">
                         <div id="propertyCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
-                            <div class="carousel-indicators">
-                                ${indicatorsHTML}
-                            </div>
-                            <div class="carousel-inner">
-                                ${innerHTML}
-                            </div>
+                            <div class="carousel-indicators">${indicatorsHTML}</div>
+                            <div class="carousel-inner">${innerHTML}</div>
                             ${imagesArray.length > 1 ? `
-                            <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
-                                <span class="carousel-control-prev-icon"></span>
-                            </button>
-                            <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
-                                <span class="carousel-control-next-icon"></span>
-                            </button>` : ''}
+                            <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>` : ''}
                         </div>
 
-                        <h2 class="fw-bold mb-3">${prop.title}</h2>
-                        <p class="text-muted fs-5"><i class="fas fa-map-marker-alt text-danger me-2"></i> ${prop.city} - حي ${prop.district}</p>
+                        <h2 class="fw-bold mb-3">${currentPropData.title}</h2>
+                        <p class="text-muted fs-5"><i class="fas fa-map-marker-alt text-danger me-2"></i> ${currentPropData.city} - حي ${currentPropData.district}</p>
                         
                         <h4 class="fw-bold mt-4 border-bottom pb-2">التفاصيل والوصف</h4>
-                        <p class="fs-5" style="white-space: pre-wrap; line-height: 1.8;">${prop.description}</p>
+                        <p class="fs-5" style="white-space: pre-wrap; line-height: 1.8;">${currentPropData.description}</p>
                     </div>
 
                     <div class="col-lg-4">
                         <div class="sticky-top" style="top: 20px;">
                             <div class="text-center mb-4">
-                                <div class="price-badge d-inline-block w-100">${Number(prop.price).toLocaleString()} ريال سعودي</div>
+                                <div class="price-badge d-inline-block w-100">${Number(currentPropData.price).toLocaleString()} ريال سعودي</div>
                             </div>
                             
-                            <div class="info-box">
-                                <strong><i class="fas fa-home text-primary me-2"></i> نوع العقار:</strong> ${categoryText}
-                            </div>
-                            <div class="info-box">
-                                <strong><i class="fas fa-tags text-primary me-2"></i> العرض:</strong> ${typeText}
-                            </div>
-                            <div class="info-box border-success">
-                                <strong><i class="fas fa-hashtag text-success me-2"></i> رقم الإعلان:</strong> ${prop.id}
-                            </div>
-
+                            <div class="info-box"><strong><i class="fas fa-home text-primary me-2"></i> نوع العقار:</strong> ${categoryText}</div>
+                            <div class="info-box"><strong><i class="fas fa-tags text-primary me-2"></i> العرض:</strong> ${typeText}</div>
+                            <div class="info-box border-success"><strong><i class="fas fa-hashtag text-success me-2"></i> رقم الإعلان:</strong> ${currentPropData.id}</div>
+                            
                             <div class="commission-box my-3">
                                 <i class="fas fa-hand-holding-usd me-2"></i> عمولة السعي (2.5%): ${commissionValue} ر.س
                             </div>
 
-                            <a href="https://wa.me/966500000000?text=السلام عليكم، أستفسر عن الإعلان رقم: ${prop.id}%0Aالعنوان: ${prop.title}" class="btn btn-success w-100 btn-lg fw-bold no-print mt-3">
+                            <a href="https://wa.me/966500000000?text=السلام عليكم، أستفسر عن الإعلان رقم: ${currentPropData.id}%0Aالعنوان: ${currentPropData.title}" class="btn btn-success w-100 btn-lg fw-bold no-print mt-3">
                                 <i class="fab fa-whatsapp me-2"></i> تواصل عبر الواتساب
                             </a>
-                            <button onclick="window.history.back()" class="btn btn-outline-secondary w-100 mt-2 fw-bold no-print">
-                                <i class="fas fa-arrow-right me-2"></i> العودة للرئيسية
+                            <button onclick="shareProperty()" class="btn btn-outline-primary w-100 mt-2 fw-bold no-print">
+                                <i class="fas fa-share-alt me-2"></i> مشاركة الإعلان
                             </button>
                         </div>
                     </div>
                 </div>
             `;
-
             document.getElementById('propertyDetails').innerHTML = detailsHTML;
         });
+
+        function shareProperty() {
+            if (!currentPropData) return;
+            
+            const shareTitle = `فرصة عقارية: ${currentPropData.title}`;
+            const shareText = `شاهد هذا العقار الرائع في ${currentPropData.city} بسعر ${Number(currentPropData.price).toLocaleString()} ريال.`;
+            const shareUrl = window.location.href;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(`${shareTitle}\n${shareText}\n${shareUrl}`).then(() => {
+                    alert("تم نسخ رابط العقار وتفاصيله، يمكنك لصقه وإرساله لأي شخص!");
+                });
+            }
+        }
     </script>
 </body>
 </html>
