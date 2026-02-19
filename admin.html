@@ -67,10 +67,33 @@
 
                     <div class="col-md-6">
                         <label class="form-label">نوع العقار</label>
-                        <select class="form-select" id="propCategory">
-                            <option value="villa">فيلا</option>
-                            <option value="apartment">شقة</option>
-                            <option value="land">أرض</option>
+                        <select class="form-select" id="propCategory" required>
+                            <optgroup label="عقارات سكنية">
+                                <option value="فيلا">فيلا</option>
+                                <option value="شقة">شقة</option>
+                                <option value="دور">دور</option>
+                                <option value="ملحق">ملحق</option>
+                                <option value="عمارة">عمارة</option>
+                                <option value="قصر">قصر</option>
+                                <option value="بيت شعبي">بيت شعبي</option>
+                            </optgroup>
+                            <optgroup label="عقارات تجارية">
+                                <option value="محل">محل</option>
+                                <option value="مكتب">مكتب</option>
+                                <option value="معرض">معرض</option>
+                                <option value="مستودع">مستودع</option>
+                                <option value="مجمع تجاري">مجمع تجاري</option>
+                            </optgroup>
+                            <optgroup label="أراضي ومزارع">
+                                <option value="أرض سكنية">أرض سكنية</option>
+                                <option value="أرض تجارية">أرض تجارية</option>
+                                <option value="أرض زراعية">أرض زراعية</option>
+                                <option value="مزرعة">مزرعة</option>
+                                <option value="استراحة / شاليه">استراحة / شاليه</option>
+                            </optgroup>
+                            <optgroup label="أخرى">
+                                <option value="أخرى">أخرى...</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -155,7 +178,7 @@
         const VALID_USERNAME = "admin";
         const VALID_PASSWORD = "12345";
         let editingId = null; 
-        let currentImagesData = []; // مصفوفة لحفظ عدة صور
+        let currentImagesData = [];
 
         document.addEventListener('DOMContentLoaded', () => {
             if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
@@ -187,7 +210,6 @@
             const files = Array.from(e.target.files);
             if (files.length === 0) return;
 
-            // تفريغ السابق في حال الإضافة الجديدة
             if(!editingId) currentImagesData = [];
             const previewContainer = document.getElementById('imagePreviewContainer');
             if(!editingId) previewContainer.innerHTML = '';
@@ -223,7 +245,7 @@
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.5)); // جودة 50% لتقليل الحجم
+                        resolve(canvas.toDataURL('image/jpeg', 0.5)); 
                     };
                     img.src = event.target.result;
                 };
@@ -273,7 +295,7 @@
                     category: document.getElementById('propCategory').value,
                     city: finalCity,
                     district: document.getElementById('propDistrict').value,
-                    images: currentImagesData, // حفظ مصفوفة الصور
+                    images: currentImagesData, 
                     description: document.getElementById('propDesc').value
                 };
                 try {
@@ -312,7 +334,6 @@
             const previewContainer = document.getElementById('imagePreviewContainer');
             previewContainer.innerHTML = '';
             
-            // التوافقية مع العقارات القديمة التي لها صورة واحدة
             let imagesArray = Array.isArray(prop.images) ? prop.images : (prop.image ? [prop.image] : []);
             currentImagesData = imagesArray;
 
@@ -351,7 +372,6 @@
             const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
 
             properties.forEach((prop, index) => {
-                // التوافقية مع القديم والجديد
                 let coverImg = Array.isArray(prop.images) ? prop.images[0] : prop.image;
                 const row = `
                 <tr>
