@@ -20,7 +20,7 @@
             <span class="navbar-brand">لوحة المسوق العقاري</span>
             <div class="d-flex gap-2">
                 <button id="logoutBtn" onclick="logout()" class="btn btn-danger btn-sm d-none">تسجيل الخروج</button>
-                <a href="index.html" class="btn btn-primary btn-sm">الذهاب للموقع الرئيسي</a>
+                <button onclick="window.location.href='index.html';" class="btn btn-primary btn-sm">الذهاب للموقع الرئيسي</button>
             </div>
         </div>
     </nav>
@@ -134,7 +134,7 @@
                     </div>
                     
                     <div class="col-md-4">
-                        <label class="form-label">صور العقار (يمكنك تحديد عدة صور)</label>
+                        <label class="form-label">صور العقار (تحديد عدة صور)</label>
                         <input type="file" class="form-control" id="propImageInput" accept="image/*" multiple>
                         <div id="imagePreviewContainer" class="mt-2 d-flex flex-wrap"></div>
                     </div>
@@ -177,7 +177,7 @@
         const VALID_PASSWORD = "12345";
         let editingId = null; 
         let currentImagesData = [];
-        let processingPendingId = null; // آي دي الطلب المعلق الذي تتم مراجعته الآن
+        let processingPendingId = null; 
 
         document.addEventListener('DOMContentLoaded', () => {
             if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
@@ -204,7 +204,6 @@
 
         function logout() { sessionStorage.removeItem('isAdminLoggedIn'); location.reload(); }
 
-        // --- نظام ضغط ومعالجة الصور ---
         document.getElementById('propImageInput').addEventListener('change', async function(e) {
             const files = Array.from(e.target.files);
             if (files.length === 0) return;
@@ -246,7 +245,6 @@
             else { customInput.classList.add('d-none'); customInput.required = false; customInput.value = ''; }
         }
 
-        // --- حفظ البيانات ونشرها ---
         document.getElementById('addPropertyForm').addEventListener('submit', function(e) {
             e.preventDefault();
             if (currentImagesData.length === 0 && !editingId) { alert("اختر صورة واحدة على الأقل!"); return; }
@@ -286,8 +284,6 @@
                 try {
                     properties.unshift(newProp);
                     alert('تم نشر العقار بنجاح!');
-                    
-                    // إذا كان هذا العقار قادم من طلبات الزوار المعلقة، نقوم بحذفه من هناك
                     if (processingPendingId) {
                         let pending = JSON.parse(localStorage.getItem('pendingProperties')) || [];
                         pending = pending.filter(p => p.id !== processingPendingId);
@@ -301,7 +297,6 @@
             loadTables();
         });
 
-        // --- جلب الطلب المعلق للمراجعة ونقله لنموذج الإضافة ---
         function reviewPending(id) {
             const pendingProps = JSON.parse(localStorage.getItem('pendingProperties')) || [];
             const prop = pendingProps.find(p => p.id === id);
@@ -345,7 +340,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // رفض وحذف الطلب المعلق
         function deletePending(id) {
             if(confirm('هل أنت متأكد من رفض وحذف هذا الطلب؟')) {
                 let pending = JSON.parse(localStorage.getItem('pendingProperties')) || [];
@@ -404,7 +398,6 @@
         }
 
         function loadTables() {
-            // تحميل العقارات المنشورة
             const tbody = document.getElementById('propertiesTable');
             tbody.innerHTML = '';
             const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
@@ -424,7 +417,6 @@
                 tbody.innerHTML += row;
             });
 
-            // تحميل الطلبات المعلقة
             const pBody = document.getElementById('pendingTable');
             pBody.innerHTML = '';
             const pending = JSON.parse(localStorage.getItem('pendingProperties')) || [];
