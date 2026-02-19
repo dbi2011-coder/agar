@@ -65,30 +65,72 @@
                 <div class="col-md-2">
                     <label class="form-label fw-bold">نوع العقار</label>
                     <select class="form-select" id="filterCategory">
-                        <option value="all">الكل</option>
-                        <option value="villa">فيلا</option>
-                        <option value="apartment">شقة</option>
-                        <option value="land">أرض</option>
+                        <option value="all">كل العقارات</option>
+                        <optgroup label="عقارات سكنية">
+                            <option value="فيلا">فيلا</option>
+                            <option value="شقة">شقة</option>
+                            <option value="دور">دور</option>
+                            <option value="ملحق">ملحق</option>
+                            <option value="عمارة">عمارة</option>
+                            <option value="قصر">قصر</option>
+                            <option value="بيت شعبي">بيت شعبي</option>
+                        </optgroup>
+                        <optgroup label="عقارات تجارية">
+                            <option value="محل">محل</option>
+                            <option value="مكتب">مكتب</option>
+                            <option value="معرض">معرض</option>
+                            <option value="مستودع">مستودع</option>
+                            <option value="مجمع تجاري">مجمع تجاري</option>
+                        </optgroup>
+                        <optgroup label="أراضي ومزارع">
+                            <option value="أرض سكنية">أرض سكنية</option>
+                            <option value="أرض تجارية">أرض تجارية</option>
+                            <option value="أرض زراعية">أرض زراعية</option>
+                            <option value="مزرعة">مزرعة</option>
+                            <option value="استراحة / شاليه">استراحة / شاليه</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">المدينة</label>
-                    <select class="form-select" id="filterCity">
+                    <select class="form-select" id="filterCity" onchange="toggleFilterCustomCity()">
                         <option value="all">كل المدن</option>
                         <option value="الرياض">الرياض</option>
-                        <option value="جدة">جدة</option>
-                        <option value="الدمام">الدمام</option>
                         <option value="مكة المكرمة">مكة المكرمة</option>
                         <option value="المدينة المنورة">المدينة المنورة</option>
+                        <option value="جدة">جدة</option>
+                        <option value="الدمام">الدمام</option>
+                        <option value="الخبر">الخبر</option>
+                        <option value="الظهران">الظهران</option>
+                        <option value="الأحساء">الأحساء</option>
+                        <option value="القطيف">القطيف</option>
+                        <option value="الجبيل">الجبيل</option>
+                        <option value="الطائف">الطائف</option>
+                        <option value="تبوك">تبوك</option>
+                        <option value="بريدة">بريدة</option>
+                        <option value="عنيزة">عنيزة</option>
+                        <option value="حائل">حائل</option>
+                        <option value="أبها">أبها</option>
+                        <option value="خميس مشيط">خميس مشيط</option>
+                        <option value="جازان">جازان</option>
+                        <option value="نجران">نجران</option>
+                        <option value="الباحة">الباحة</option>
+                        <option value="عرعر">عرعر</option>
+                        <option value="سكاكا">سكاكا</option>
+                        <option value="ينبع">ينبع</option>
+                        <option value="حفر الباطن">حفر الباطن</option>
+                        <option value="الخرج">الخرج</option>
+                        <option value="other" class="fw-bold text-primary">مدينة أخرى (بحث)...</option>
                     </select>
+                    <input type="text" class="form-control mt-2 d-none" id="filterCustomCity" placeholder="اكتب اسم المدينة...">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">الحي / الوصف</label>
                     <input type="text" class="form-control" id="filterText" placeholder="اكتب للبحث...">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-bold">السعر</label>
-                    <input type="number" class="form-control" id="maxPrice" placeholder="أعلى سعر">
+                    <label class="form-label fw-bold">السعر الأعلى</label>
+                    <input type="number" class="form-control" id="maxPrice" placeholder="الحد الأقصى">
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="button" onclick="applyFilter()" class="btn btn-primary w-100 fw-bold">بحث</button>
@@ -104,7 +146,14 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', loadProperties);
+        document.addEventListener('DOMContentLoaded', () => loadProperties());
+
+        function toggleFilterCustomCity() {
+            const citySelect = document.getElementById('filterCity');
+            const customInput = document.getElementById('filterCustomCity');
+            if (citySelect.value === 'other') { customInput.classList.remove('d-none'); } 
+            else { customInput.classList.add('d-none'); customInput.value = ''; }
+        }
 
         function loadProperties(filteredData = null) {
             const container = document.getElementById('propertiesContainer');
@@ -113,7 +162,7 @@
             if (filteredData) properties = filteredData;
 
             if (properties.length === 0) {
-                container.innerHTML = '<div class="col-12 text-center text-muted py-5"><h5>لا توجد عقارات</h5></div>';
+                container.innerHTML = '<div class="col-12 text-center text-muted py-5"><h5>لا توجد عقارات تطابق بحثك</h5></div>';
                 return;
             }
 
@@ -121,9 +170,12 @@
                 const badgeClass = prop.type === 'sale' ? 'badge-sale' : 'badge-rent';
                 const typeText = prop.type === 'sale' ? 'بيع' : 'إيجار';
                 
-                // جلب الصورة الأولى للغلاف (التوافق مع القديم والجديد)
                 let coverImg = Array.isArray(prop.images) ? prop.images[0] : prop.image;
                 
+                // توافقية مع الأنواع القديمة في حال وجودها
+                const categoryMap = { 'villa': 'فيلا', 'apartment': 'شقة', 'land': 'أرض' };
+                const displayCategory = categoryMap[prop.category] || prop.category;
+
                 const cardHTML = `
                 <div class="col-md-4 d-flex align-items-stretch">
                     <div class="card property-card w-100">
@@ -143,6 +195,9 @@
                                 <a href="details.html?id=${prop.id}" class="btn btn-primary w-100 fw-bold">استعراض التفاصيل <i class="fas fa-arrow-left me-1"></i></a>
                             </div>
                         </div>
+                        <div class="card-footer bg-light text-muted small border-top-0">
+                            <i class="fas fa-home text-primary"></i> ${displayCategory}
+                        </div>
                     </div>
                 </div>
                 `;
@@ -156,13 +211,21 @@
             const category = document.getElementById('filterCategory').value;
             const text = document.getElementById('filterText').value.toLowerCase();
             const max = document.getElementById('maxPrice').value;
-            let city = document.getElementById('filterCity').value;
+            
+            let citySelectValue = document.getElementById('filterCity').value;
+            let customCityText = document.getElementById('filterCustomCity').value.trim();
 
             const filtered = properties.filter(p => {
                 let match = true;
                 if (type !== 'all' && p.type !== type) match = false;
                 if (category !== 'all' && p.category !== category) match = false;
-                if (city !== 'all' && p.city !== city) match = false;
+                
+                if (citySelectValue === 'other') {
+                    if (customCityText && !p.city.includes(customCityText)) match = false;
+                } else if (citySelectValue !== 'all') {
+                    if (p.city !== citySelectValue) match = false;
+                }
+
                 if (text && !p.district.includes(text) && !p.description.includes(text)) match = false;
                 if (max && Number(p.price) > Number(max)) match = false;
                 return match;
