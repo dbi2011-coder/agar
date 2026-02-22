@@ -15,6 +15,15 @@
         .info-box { background: #f4f6f9; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-right: 4px solid #0d6efd; }
         .commission-box { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; font-weight: bold; border-right: 4px solid #ffc107; }
         
+        /* ألوان الهوية البصرية المطابقة للشعار */
+        .bg-dark { background-color: #1a1a1a !important; }
+        .btn-primary, .bg-primary { background-color: #B68D40 !important; border-color: #B68D40 !important; color: #fff !important; }
+        .btn-primary:hover { background-color: #9A7532 !important; border-color: #9A7532 !important; }
+        .text-primary { color: #B68D40 !important; }
+        .border-primary { border-color: #B68D40 !important; }
+        .price-badge { background: #B68D40; color: white; }
+        .info-box { border-right: 4px solid #B68D40; }
+
         @media print {
             body { background: white; margin: 0; padding: 0; }
             .no-print { display: none !important; }
@@ -28,8 +37,10 @@
 <body>
 
     <nav class="navbar navbar-dark bg-dark no-print">
-        <div class="container">
-            <button onclick="window.location.href='index.html';" class="btn btn-link text-white text-decoration-none navbar-brand fw-bold p-0"><i class="fas fa-home me-2"></i> بوابة العقار</button>
+        <div class="container d-flex justify-content-between align-items-center">
+            <button onclick="window.location.href='index.html';" class="btn btn-link text-white text-decoration-none navbar-brand fw-bold p-0 d-flex align-items-center">
+                <img src="logo.jpg" alt="الرئيسية" style="height: 50px; border-radius: 8px; margin-left: 10px;"> العودة للرئيسية
+            </button>
             <div class="d-flex gap-2">
                 <button onclick="shareProperty()" class="btn btn-primary btn-sm fw-bold"><i class="fas fa-share-alt me-1"></i> مشاركة العقار</button>
                 <button onclick="window.print()" class="btn btn-light btn-sm fw-bold"><i class="fas fa-print me-1"></i> طباعة</button>
@@ -62,7 +73,7 @@
                 document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، هذا العقار غير موجود!</div>'; return;
             }
 
-            let imagesArray = Array.isArray(currentPropData.images) ? currentPropData.images : (currentPropData.image ? [currentPropData.image] : []);
+            let imagesArray = (Array.isArray(currentPropData.images) && currentPropData.images.length > 0) ? currentPropData.images : (currentPropData.image ? [currentPropData.image] : ['https://placehold.co/800x500/eeeeee/999999?text=لا+توجد+صورة']);
             let indicatorsHTML = ''; let innerHTML = '';
             
             imagesArray.forEach((imgSrc, index) => {
@@ -90,7 +101,7 @@
                         <h2 class="fw-bold mb-3">${currentPropData.title}</h2>
                         <p class="text-muted fs-5"><i class="fas fa-map-marker-alt text-danger me-2"></i> ${currentPropData.city} - حي ${currentPropData.district}</p>
                         
-                        <h4 class="fw-bold mt-4 border-bottom pb-2">التفاصيل والوصف</h4>
+                        <h4 class="fw-bold mt-4 border-bottom pb-2 text-primary">التفاصيل والوصف</h4>
                         <p class="fs-5" style="white-space: pre-wrap; line-height: 1.8;">${currentPropData.description}</p>
                     </div>
 
@@ -102,7 +113,7 @@
                             
                             <div class="info-box"><strong><i class="fas fa-home text-primary me-2"></i> نوع العقار:</strong> ${categoryText}</div>
                             <div class="info-box"><strong><i class="fas fa-tags text-primary me-2"></i> العرض:</strong> ${typeText}</div>
-                            <div class="info-box border-success"><strong><i class="fas fa-hashtag text-success me-2"></i> رقم الإعلان:</strong> ${currentPropData.id}</div>
+                            <div class="info-box border-success" style="border-right-color: #198754 !important;"><strong><i class="fas fa-hashtag text-success me-2"></i> رقم الإعلان:</strong> ${currentPropData.id}</div>
                             
                             <div class="commission-box my-3">
                                 <i class="fas fa-hand-holding-usd me-2"></i> عمولة السعي (2.5%): ${commissionValue} ر.س
