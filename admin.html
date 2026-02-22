@@ -12,15 +12,25 @@
         .login-container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin: 5px; border: 1px solid #ccc; }
         .pending-box { background: #fff3cd; border: 2px dashed #ffc107; }
+        
+        /* ألوان الهوية البصرية المطابقة للشعار */
+        .bg-dark { background-color: #1a1a1a !important; }
+        .btn-primary, .bg-primary { background-color: #B68D40 !important; border-color: #B68D40 !important; color: #fff !important; }
+        .btn-primary:hover { background-color: #9A7532 !important; border-color: #9A7532 !important; }
+        .text-primary { color: #B68D40 !important; }
+        .border-primary { border-color: #B68D40 !important; }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
-            <span class="navbar-brand">لوحة المسوق العقاري</span>
-            <div class="d-flex gap-2">
+            <a class="navbar-brand text-white text-decoration-none d-flex align-items-center" href="#">
+                <img src="logo.jpg" alt="لوحة الإدارة" style="height: 50px; border-radius: 8px;"> 
+                <span class="ms-2 fw-bold">لوحة الإدارة</span>
+            </a>
+            <div class="d-flex gap-2 align-items-center">
                 <button id="logoutBtn" onclick="logout()" class="btn btn-danger btn-sm d-none">تسجيل الخروج</button>
-                <button onclick="window.location.href='index.html';" class="btn btn-primary btn-sm">الذهاب للموقع الرئيسي</button>
+                <button onclick="window.location.href='index.html';" class="btn btn-outline-light btn-sm">الذهاب للموقع الرئيسي</button>
             </div>
         </div>
     </nav>
@@ -134,7 +144,7 @@
                     </div>
                     
                     <div class="col-md-4">
-                        <label class="form-label">صور العقار (تحديد عدة صور)</label>
+                        <label class="form-label">صور العقار (اختياري)</label>
                         <input type="file" class="form-control" id="propImageInput" accept="image/*" multiple>
                         <div id="imagePreviewContainer" class="mt-2 d-flex flex-wrap"></div>
                     </div>
@@ -247,7 +257,6 @@
 
         document.getElementById('addPropertyForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            if (currentImagesData.length === 0 && !editingId) { alert("اختر صورة واحدة على الأقل!"); return; }
 
             let finalCity = document.getElementById('propCity').value;
             if (finalCity === 'other') finalCity = document.getElementById('customCity').value;
@@ -402,7 +411,7 @@
             tbody.innerHTML = '';
             const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
             properties.forEach((prop, index) => {
-                let coverImg = Array.isArray(prop.images) ? prop.images[0] : prop.image;
+                let coverImg = (Array.isArray(prop.images) && prop.images.length > 0) ? prop.images[0] : (prop.image ? prop.image : 'https://placehold.co/100x100/eeeeee/999999?text=بدون');
                 const row = `
                 <tr>
                     <td><img src="${coverImg}" width="50" height="50" style="object-fit:cover; border-radius:5px;"></td>
