@@ -274,7 +274,8 @@
             properties.forEach(prop => {
                 const badgeClass = prop.type === 'sale' ? 'badge-sale' : 'badge-rent';
                 const typeText = prop.type === 'sale' ? 'بيع' : 'إيجار';
-                let coverImg = (Array.isArray(prop.images) && prop.images.length > 0) ? prop.images[0] : 'https://placehold.co/600x400/eeeeee/999999?text=لا+توجد+صورة';
+                // تم التحديث هنا لاستخدام الشعار في حال عدم وجود صورة
+                let coverImg = (Array.isArray(prop.images) && prop.images.length > 0) ? prop.images[0] : 'logo.jpg';
                 const categoryMap = { 'villa': 'فيلا', 'apartment': 'شقة', 'land': 'أرض' };
                 const displayCategory = categoryMap[prop.category] || prop.category;
 
