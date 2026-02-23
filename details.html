@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Tajawal', sans-serif; background-color: #f8f9fa; }
         .details-container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-top: 30px; margin-bottom: 50px;}
@@ -15,12 +16,10 @@
         .info-box { background: #f4f6f9; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-right: 4px solid #0d6efd; }
         .commission-box { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; font-weight: bold; border-right: 4px solid #ffc107; }
         
-        /* ألوان الهوية البصرية المطابقة للشعار */
         .bg-dark { background-color: #1a1a1a !important; }
         .btn-primary, .bg-primary { background-color: #B68D40 !important; border-color: #B68D40 !important; color: #fff !important; }
         .btn-primary:hover { background-color: #9A7532 !important; border-color: #9A7532 !important; }
         .text-primary { color: #B68D40 !important; }
-        .border-primary { border-color: #B68D40 !important; }
         .price-badge { background: #B68D40; color: white; }
         .info-box { border-right: 4px solid #B68D40; }
 
@@ -30,7 +29,6 @@
             .details-container { box-shadow: none; margin-top: 0; }
             .carousel-control-prev, .carousel-control-next, .carousel-indicators { display: none !important; }
             .carousel-item img { height: 400px; page-break-inside: avoid; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
@@ -56,9 +54,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const supabaseUrl = 'https://qozdtxrvzyjvoatyizrg.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvemR0eHJ2enlqdm9hdHlpenJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODg2NTEsImV4cCI6MjA4NzA2NDY1MX0.TauoT3b3L_ucs7pArG1J3rGmlAs2-b_5AZ2nlIPn18k';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
         let currentPropData = null; 
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const propId = urlParams.get('id');
 
@@ -66,14 +68,20 @@
                 document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، لم يتم العثور على العقار!</div>'; return;
             }
 
-            const properties = JSON.parse(localStorage.getItem('myProperties')) || [];
-            currentPropData = properties.find(p => p.id === Number(propId));
+            const { data, error } = await supabaseClient
+                .from('properties')
+                .select('*')
+                .eq('id', propId)
+                .single();
 
-            if (!currentPropData) {
-                document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، هذا العقار غير موجود!</div>'; return;
+            if (error || !data) {
+                document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، هذا العقار غير موجود أو تم حذفه!</div>'; 
+                return;
             }
 
-            let imagesArray = (Array.isArray(currentPropData.images) && currentPropData.images.length > 0) ? currentPropData.images : (currentPropData.image ? [currentPropData.image] : ['https://placehold.co/800x500/eeeeee/999999?text=لا+توجد+صورة']);
+            currentPropData = data;
+
+            let imagesArray = (Array.isArray(currentPropData.images) && currentPropData.images.length > 0) ? currentPropData.images : ['https://placehold.co/800x500/eeeeee/999999?text=لا+توجد+صورة'];
             let indicatorsHTML = ''; let innerHTML = '';
             
             imagesArray.forEach((imgSrc, index) => {
@@ -134,20 +142,15 @@
 
         function shareProperty() {
             if (!currentPropData) return;
-            
             const shareTitle = `فرصة عقارية: ${currentPropData.title}`;
             const shareText = `شاهد هذا العقار الرائع في ${currentPropData.city} بسعر ${Number(currentPropData.price).toLocaleString()} ريال.`;
             const shareUrl = window.location.href;
 
             if (navigator.share) {
-                navigator.share({
-                    title: shareTitle,
-                    text: shareText,
-                    url: shareUrl
-                }).catch(console.error);
+                navigator.share({ title: shareTitle, text: shareText, url: shareUrl }).catch(console.error);
             } else {
                 navigator.clipboard.writeText(`${shareTitle}\n${shareText}\n${shareUrl}`).then(() => {
-                    alert("تم نسخ رابط العقار وتفاصيله، يمكنك لصقه وإرساله لأي شخص!");
+                    alert("تم نسخ رابط العقار وتفاصيله!");
                 });
             }
         }
