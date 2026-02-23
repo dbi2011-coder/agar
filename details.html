@@ -81,7 +81,8 @@
 
             currentPropData = data;
 
-            let imagesArray = (Array.isArray(currentPropData.images) && currentPropData.images.length > 0) ? currentPropData.images : ['https://placehold.co/800x500/eeeeee/999999?text=لا+توجد+صورة'];
+            // تم التحديث هنا لاستخدام الشعار في حال عدم وجود صورة
+            let imagesArray = (Array.isArray(currentPropData.images) && currentPropData.images.length > 0) ? currentPropData.images : ['logo.jpg'];
             let indicatorsHTML = ''; let innerHTML = '';
             
             imagesArray.forEach((imgSrc, index) => {
