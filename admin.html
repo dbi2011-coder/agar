@@ -6,6 +6,8 @@
     <title>لوحة تحكم المسوق | الإدارة</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Tajawal', sans-serif; background-color: #f0f2f5; }
@@ -16,6 +18,7 @@
         .bg-dark { background-color: #1a1a1a !important; }
         .btn-primary, .bg-primary { background-color: #B68D40 !important; border-color: #B68D40 !important; color: #fff !important; }
         .text-primary { color: #B68D40 !important; }
+        #mapPicker { height: 300px; width: 100%; border-radius: 8px; border: 1px solid #ccc; z-index: 1; }
     </style>
 </head>
 <body>
@@ -115,6 +118,13 @@
                         <input type="file" class="form-control" id="propImageInput" accept="image/*" multiple>
                         <div id="imagePreviewContainer" class="mt-2 d-flex flex-wrap"></div>
                     </div>
+                    
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-primary"><i class="fas fa-map-marker-alt"></i> تحديد موقع العقار على الخريطة (اضغط على الخريطة لوضع المؤشر)</label>
+                        <div id="mapPicker"></div>
+                        <div class="form-text mt-1 text-muted" id="mapStatus">لم يتم تحديد موقع بعد.</div>
+                    </div>
+
                     <div class="col-12">
                         <label class="form-label">وصف تفصيلي</label>
                         <textarea class="form-control" id="propDesc" rows="3"></textarea>
@@ -155,6 +165,9 @@
 
         let editingId = null; let processingPendingId = null; let currentImagesData = [];
         let allDBProperties = []; let allDBPending = [];
+        
+        // متغيرات الخريطة
+        let map; let marker; let selectedLat = null; let selectedLng = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
@@ -177,8 +190,28 @@
             document.getElementById('loginSection').classList.add('d-none');
             document.getElementById('adminSection').classList.remove('d-none');
             document.getElementById('logoutBtn').classList.remove('d-none');
+            setTimeout(initMap, 500); // تهيئة الخريطة بعد ظهور القسم
         }
+        
         function logout() { sessionStorage.removeItem('isAdminLoggedIn'); location.reload(); }
+
+        // إعداد الخريطة
+        function initMap() {
+            if(map) return; // لمنع تكرار التهيئة
+            // الإحداثيات الافتراضية للرياض
+            map = L.map('mapPicker').setView([24.7136, 46.6753], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            map.on('click', function(e) {
+                selectedLat = e.latlng.lat;
+                selectedLng = e.latlng.lng;
+                if (marker) { map.removeLayer(marker); }
+                marker = L.marker([selectedLat, selectedLng]).addTo(map);
+                document.getElementById('mapStatus').innerHTML = `<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> تم تحديد الموقع بنجاح.</span>`;
+            });
+        }
 
         document.getElementById('propImageInput').addEventListener('change', async function(e) {
             const files = Array.from(e.target.files);
@@ -239,19 +272,18 @@
                 owner_phone: document.getElementById('propOwnerPhone').value,
                 description: document.getElementById('propDesc').value,
                 images: currentImagesData,
+                lat: selectedLat, // إضافة خط العرض
+                lng: selectedLng, // إضافة خط الطول
                 status: 'approved' 
             };
 
             if (editingId && !processingPendingId) {
-                // تحديث عقار موجود
                 await supabaseClient.from('properties').update(propertyData).eq('id', editingId);
                 alert('تم التحديث بنجاح!');
             } else if (processingPendingId) {
-                // الموافقة على طلب (تحديث الحالة)
                 await supabaseClient.from('properties').update(propertyData).eq('id', processingPendingId);
                 alert('تم نشر طلب الزائر بنجاح!');
             } else {
-                // إضافة جديد من الإدارة مباشرة
                 propertyData.id = Date.now();
                 await supabaseClient.from('properties').insert([propertyData]);
                 alert('تم نشر العقار بنجاح!');
@@ -278,8 +310,7 @@
             tbody.innerHTML = '';
             if(allDBProperties.length === 0) tbody.innerHTML = `<tr><td colspan="5">لا يوجد</td></tr>`;
             allDBProperties.forEach(prop => {
-                // تم التحديث هنا لاستخدام الشعار في حال عدم وجود صورة
-                let coverImg = (Array.isArray(prop.images) && prop.images.length > 0) ? prop.images[0] : 'logo.jpg';
+                let coverImg = (Array.isArray(prop.images) && prop.images.length > 0) ? prop.images[0] : 'https://placehold.co/100';
                 tbody.innerHTML += `<tr>
                     <td><img src="${coverImg}" width="50" height="50" style="object-fit:cover;"></td>
                     <td>${prop.title}</td>
@@ -344,6 +375,19 @@
             document.getElementById('propOwnerPhone').value = prop.owner_phone || '';
             document.getElementById('propDesc').value = prop.description;
 
+            // استعادة بيانات الخريطة
+            selectedLat = prop.lat || null;
+            selectedLng = prop.lng || null;
+            if(selectedLat && selectedLng && map) {
+                if (marker) map.removeLayer(marker);
+                marker = L.marker([selectedLat, selectedLng]).addTo(map);
+                map.setView([selectedLat, selectedLng], 14);
+                document.getElementById('mapStatus').innerHTML = `<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> تم استعادة موقع العقار. يمكنك تغييره بالضغط على الخريطة.</span>`;
+            } else {
+                if(marker && map) map.removeLayer(marker);
+                document.getElementById('mapStatus').innerHTML = `لم يتم تحديد موقع بعد.`;
+            }
+
             const previewContainer = document.getElementById('imagePreviewContainer');
             previewContainer.innerHTML = '';
             currentImagesData = Array.isArray(prop.images) ? prop.images : [];
@@ -371,6 +415,12 @@
             const btn = document.getElementById('submitBtn');
             btn.textContent = 'حفظ ونشر العقار'; btn.classList.replace('btn-warning', 'btn-success');
             toggleCustomCity();
+            
+            // إعادة تعيين الخريطة
+            selectedLat = null; selectedLng = null;
+            if(marker && map) map.removeLayer(marker);
+            document.getElementById('mapStatus').innerHTML = `لم يتم تحديد موقع بعد.`;
+            if(map) map.setView([24.7136, 46.6753], 10);
         }
     </script>
 </body>
