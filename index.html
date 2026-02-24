@@ -103,16 +103,26 @@
                                 <input type="file" class="form-control" id="vImageInput" accept="image/*" multiple>
                                 <div class="form-text">سيتم إرفاق الصور لتتم مراجعتها من قبل الإدارة</div>
                             </div>
+
+                            <hr class="mt-4">
+                            <h6 class="fw-bold text-primary"><i class="fas fa-map-marker-alt"></i> إعدادات الموقع</h6>
                             
                             <div class="col-12">
-                                <label class="form-label fw-bold text-primary"><i class="fas fa-map-marker-alt"></i> تحديد موقع العقار على الخريطة (اختياري)</label>
+                                <label class="form-label">رابط خرائط جوجل للعقار (اختياري)</label>
+                                <input type="url" class="form-control text-start" id="vGoogleMapUrl" dir="ltr" placeholder="https://maps.app.goo.gl/...">
+                                <div class="form-text">إذا كان لديك رابط الموقع من جوجل ماب، الصقه هنا لتسهيل الوصول إليه لاحقاً.</div>
+                            </div>
+                            
+                            <div class="col-12 mt-3">
+                                <label class="form-label">تحديد موقع العقار على الخريطة التوضيحية (اختياري)</label>
                                 <div class="input-group mb-2" dir="ltr">
-                                    <input type="text" class="form-control text-end" id="vMapUrlInput" placeholder="الصق رابط جوجل ماب (الطويل) أو الإحداثيات هنا">
+                                    <input type="text" class="form-control text-end" id="vMapUrlInput" placeholder="الصق الإحداثيات هنا للاستخراج">
                                     <button class="btn btn-secondary fw-bold" type="button" onclick="vExtractLocationFromUrl()"><i class="fas fa-search-location"></i> تحديد</button>
                                 </div>
                                 <div id="vMapPicker"></div>
                                 <div class="form-text mt-1 text-muted" id="vMapStatus">أو اضغط مباشرة على الخريطة لوضع المؤشر.</div>
                             </div>
+                            <hr class="mb-2">
 
                             <div class="col-12">
                                 <label class="form-label">الوصف والتفاصيل</label>
@@ -192,20 +202,15 @@
 
         let allPropertiesData = [];
         
-        // متغيرات خريطة الزائر
-        let vMap; 
-        let vMarker; 
-        let vSelectedLat = null; 
-        let vSelectedLng = null;
+        let vMap; let vMarker; let vSelectedLat = null; let vSelectedLng = null;
 
         document.addEventListener('DOMContentLoaded', () => loadPropertiesFromDB());
 
-        // تهيئة الخريطة عند فتح المودال الخاص بالزائر
         document.getElementById('submitPropertyModal').addEventListener('shown.bs.modal', function () {
             if (!vMap) {
                 vMap = L.map('vMapPicker').setView([24.7136, 46.6753], 10);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors'
+                    attribution: '© OpenStreetMap contributors'
                 }).addTo(vMap);
 
                 vMap.on('click', function(e) {
@@ -216,7 +221,6 @@
             }
         });
 
-        // استخراج إحداثيات الزائر من الرابط
         function vExtractLocationFromUrl() {
             const input = document.getElementById('vMapUrlInput').value;
             const regex = /(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)/;
@@ -225,10 +229,10 @@
             if (match) {
                 const lat = parseFloat(match[1]);
                 const lng = parseFloat(match[2]);
-                vUpdateMapMarker(lat, lng, "تم استخراج الموقع من الرابط بنجاح!");
+                vUpdateMapMarker(lat, lng, "تم استخراج الموقع بنجاح!");
                 document.getElementById('vMapUrlInput').value = ''; 
             } else {
-                alert('عذراً، لم نتمكن من العثور على إحداثيات. يرجى لصق الرابط الطويل أو كتابة الإحداثيات مباشرة.');
+                alert('عذراً، لم نتمكن من العثور على إحداثيات. يرجى كتابة الإحداثيات مباشرة.');
             }
         }
 
@@ -290,6 +294,7 @@
                 images: visitorImagesData,
                 lat: vSelectedLat, 
                 lng: vSelectedLng, 
+                google_map_url: document.getElementById('vGoogleMapUrl').value, // إضافة رابط جوجل للزائر
                 status: 'pending' 
             };
 
@@ -305,9 +310,9 @@
                 alert("تم استلام طلبك بنجاح! سيقوم فريقنا بمراجعته والتواصل معك قريباً.");
                 document.getElementById('visitorPropertyForm').reset();
                 document.getElementById('vMapUrlInput').value = '';
+                document.getElementById('vGoogleMapUrl').value = '';
                 
-                vSelectedLat = null;
-                vSelectedLng = null;
+                vSelectedLat = null; vSelectedLng = null;
                 if(vMarker && vMap) vMap.removeLayer(vMarker);
                 document.getElementById('vMapStatus').innerHTML = `أو اضغط مباشرة على الخريطة لوضع المؤشر.`;
                 if(vMap) vMap.setView([24.7136, 46.6753], 10);
@@ -321,15 +326,10 @@
             const container = document.getElementById('propertiesContainer');
             container.innerHTML = '<div class="col-12 text-center text-muted py-5"><h5>جاري تحميل العقارات...</h5></div>';
             
-            const { data, error } = await supabaseClient
-                .from('properties')
-                .select('*')
-                .eq('status', 'approved')
-                .order('created_at', { ascending: false });
+            const { data, error } = await supabaseClient.from('properties').select('*').eq('status', 'approved').order('created_at', { ascending: false });
 
             if (error) {
-                container.innerHTML = '<div class="col-12 text-center text-danger py-5"><h5>حدث خطأ في جلب البيانات</h5></div>';
-                return;
+                container.innerHTML = '<div class="col-12 text-center text-danger py-5"><h5>حدث خطأ في جلب البيانات</h5></div>'; return;
             }
 
             allPropertiesData = data || [];
@@ -341,8 +341,7 @@
             container.innerHTML = '';
 
             if (properties.length === 0) {
-                container.innerHTML = '<div class="col-12 text-center text-muted py-5"><h5>لا توجد عقارات مطابقة للبحث</h5></div>';
-                return;
+                container.innerHTML = '<div class="col-12 text-center text-muted py-5"><h5>لا توجد عقارات مطابقة للبحث</h5></div>'; return;
             }
 
             properties.forEach(prop => {
