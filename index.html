@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Tajawal', sans-serif; background-color: #f4f6f9; }
@@ -26,6 +30,9 @@
         .text-primary { color: #B68D40 !important; }
         .border-primary { border-color: #B68D40 !important; }
         .price-text { color: #B68D40; font-weight: bold; font-size: 1.3rem; }
+        
+        /* تنسيق خريطة الزائر */
+        #vMapPicker { height: 250px; width: 100%; border-radius: 8px; border: 1px solid #ccc; z-index: 1; }
     </style>
 </head>
 <body>
@@ -96,6 +103,13 @@
                                 <input type="file" class="form-control" id="vImageInput" accept="image/*" multiple>
                                 <div class="form-text">سيتم إرفاق الصور لتتم مراجعتها من قبل الإدارة</div>
                             </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-primary"><i class="fas fa-map-marker-alt"></i> تحديد موقع العقار على الخريطة (اختياري)</label>
+                                <div id="vMapPicker"></div>
+                                <div class="form-text mt-1 text-muted" id="vMapStatus">لم يتم تحديد موقع بعد. اضغط على الخريطة لوضع المؤشر.</div>
+                            </div>
+
                             <div class="col-12">
                                 <label class="form-label">الوصف والتفاصيل</label>
                                 <textarea class="form-control" id="vDesc" rows="3" required></textarea>
@@ -174,8 +188,36 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         let allPropertiesData = [];
+        
+        // متغيرات خريطة الزائر
+        let vMap; 
+        let vMarker; 
+        let vSelectedLat = null; 
+        let vSelectedLng = null;
 
         document.addEventListener('DOMContentLoaded', () => loadPropertiesFromDB());
+
+        // تهيئة الخريطة عند فتح المودال الخاص بالزائر
+        document.getElementById('submitPropertyModal').addEventListener('shown.bs.modal', function () {
+            if (!vMap) {
+                // الرياض كمدينة افتراضية
+                vMap = L.map('vMapPicker').setView([24.7136, 46.6753], 10);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(vMap);
+
+                vMap.on('click', function(e) {
+                    vSelectedLat = e.latlng.lat;
+                    vSelectedLng = e.latlng.lng;
+                    if (vMarker) { vMap.removeLayer(vMarker); }
+                    vMarker = L.marker([vSelectedLat, vSelectedLng]).addTo(vMap);
+                    document.getElementById('vMapStatus').innerHTML = `<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> تم تحديد الموقع بنجاح.</span>`;
+                });
+            } else {
+                // إعادة حساب أبعاد الخريطة لأنها كانت مخفية
+                vMap.invalidateSize();
+            }
+        });
 
         let visitorImagesData = [];
         
@@ -224,6 +266,8 @@
                 district: document.getElementById('vDistrict').value,
                 description: document.getElementById('vDesc').value,
                 images: visitorImagesData,
+                lat: vSelectedLat, // جلب خط العرض
+                lng: vSelectedLng, // جلب خط الطول
                 status: 'pending' // كطلب جديد للمراجعة
             };
 
@@ -238,6 +282,14 @@
             } else {
                 alert("تم استلام طلبك بنجاح! سيقوم فريقنا بمراجعته والتواصل معك قريباً.");
                 document.getElementById('visitorPropertyForm').reset();
+                
+                // إعادة تعيين الخريطة للزائر
+                vSelectedLat = null;
+                vSelectedLng = null;
+                if(vMarker && vMap) vMap.removeLayer(vMarker);
+                document.getElementById('vMapStatus').innerHTML = `لم يتم تحديد موقع بعد. اضغط على الخريطة لوضع المؤشر.`;
+                if(vMap) vMap.setView([24.7136, 46.6753], 10);
+
                 var modal = bootstrap.Modal.getInstance(document.getElementById('submitPropertyModal'));
                 modal.hide();
             }
@@ -274,8 +326,7 @@
             properties.forEach(prop => {
                 const badgeClass = prop.type === 'sale' ? 'badge-sale' : 'badge-rent';
                 const typeText = prop.type === 'sale' ? 'بيع' : 'إيجار';
-                // تم التحديث هنا لاستخدام الشعار في حال عدم وجود صورة
-                let coverImg = (Array.isArray(prop.images) && prop.images.length > 0) ? prop.images[0] : 'logo.jpg';
+                let coverImg = (Array.isArray(prop.images) && prop.images.length > 0) ? prop.images[0] : 'https://placehold.co/600x400/eeeeee/999999?text=لا+توجد+صورة';
                 const categoryMap = { 'villa': 'فيلا', 'apartment': 'شقة', 'land': 'أرض' };
                 const displayCategory = categoryMap[prop.category] || prop.category;
 
