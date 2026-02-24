@@ -310,7 +310,7 @@
             tbody.innerHTML = '';
             if(allDBProperties.length === 0) tbody.innerHTML = `<tr><td colspan="5">لا يوجد</td></tr>`;
             allDBProperties.forEach(prop => {
-                let coverImg = (Array.isArray(prop.images) && prop.images.length > 0) ? prop.images[0] : 'https://placehold.co/100';
+                let coverImg = (Array.isArray(prop.images) && prop.images.length > 0) ? prop.images[0] : 'logo.jpg';
                 tbody.innerHTML += `<tr>
                     <td><img src="${coverImg}" width="50" height="50" style="object-fit:cover;"></td>
                     <td>${prop.title}</td>
