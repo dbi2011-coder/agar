@@ -74,11 +74,7 @@
                 document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، لم يتم العثور على العقار!</div>'; return;
             }
 
-            const { data, error } = await supabaseClient
-                .from('properties')
-                .select('*')
-                .eq('id', propId)
-                .single();
+            const { data, error } = await supabaseClient.from('properties').select('*').eq('id', propId).single();
 
             if (error || !data) {
                 document.getElementById('propertyDetails').innerHTML = '<div class="alert alert-danger text-center">عذراً، هذا العقار غير موجود أو تم حذفه!</div>'; 
@@ -87,7 +83,7 @@
 
             currentPropData = data;
 
-            let imagesArray = (Array.isArray(currentPropData.images) && currentPropData.images.length > 0) ? currentPropData.images : ['https://placehold.co/800x500/eeeeee/999999?text=لا+توجد+صورة'];
+            let imagesArray = (Array.isArray(currentPropData.images) && currentPropData.images.length > 0) ? currentPropData.images : ['logo.jpg'];
             let indicatorsHTML = ''; let innerHTML = '';
             
             imagesArray.forEach((imgSrc, index) => {
@@ -101,11 +97,17 @@
             const categoryText = categoryMap[currentPropData.category] || currentPropData.category;
             const commissionValue = (Number(currentPropData.price) * 0.025).toLocaleString();
             
-            // تحقق مما إذا كان هناك خريطة محفوظة
             const hasLocation = currentPropData.lat && currentPropData.lng;
             const mapSectionHTML = hasLocation 
-                ? `<h4 class="fw-bold mt-5 border-bottom pb-2 text-primary">الموقع على الخريطة</h4>
+                ? `<h4 class="fw-bold mt-5 border-bottom pb-2 text-primary">الموقع التقريبي على الخريطة</h4>
                    <div id="propertyMap"></div>` 
+                : '';
+
+            // زر التوجه لخرائط جوجل إذا كان الرابط متاحاً
+            const googleMapBtnHTML = currentPropData.google_map_url 
+                ? `<a href="${currentPropData.google_map_url}" target="_blank" class="btn btn-danger w-100 btn-lg fw-bold no-print mt-2">
+                       <i class="fas fa-map-marked-alt me-2"></i> الموقع على خرائط جوجل
+                   </a>`
                 : '';
 
             const detailsHTML = `
@@ -145,6 +147,9 @@
                             <a href="https://wa.me/966579876796?text=السلام عليكم، أستفسر عن الإعلان رقم: ${currentPropData.id}%0Aالعنوان: ${currentPropData.title}" class="btn btn-success w-100 btn-lg fw-bold no-print mt-3">
                                 <i class="fab fa-whatsapp me-2"></i> تواصل عبر الواتساب
                             </a>
+                            
+                            ${googleMapBtnHTML}
+                            
                             <button onclick="shareProperty()" class="btn btn-outline-primary w-100 mt-2 fw-bold no-print">
                                 <i class="fas fa-share-alt me-2"></i> مشاركة الإعلان
                             </button>
@@ -155,11 +160,10 @@
             
             document.getElementById('propertyDetails').innerHTML = detailsHTML;
 
-            // تفعيل الخريطة إذا كانت الإحداثيات موجودة
             if (hasLocation) {
                 const map = L.map('propertyMap').setView([currentPropData.lat, currentPropData.lng], 15);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors'
+                    attribution: '© OpenStreetMap contributors'
                 }).addTo(map);
                 
                 L.marker([currentPropData.lat, currentPropData.lng])
