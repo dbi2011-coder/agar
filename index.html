@@ -92,7 +92,10 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">المدينة</label>
-                                <input type="text" class="form-control" id="vCity" required placeholder="الرياض، جدة، الخ..">
+                                <input type="text" class="form-control" id="vCity" list="saudiCities" required placeholder="اختر أو اكتب المدينة...">
+                                <datalist id="saudiCities">
+                                    <option value="الرياض"><option value="جدة"><option value="مكة المكرمة"><option value="المدينة المنورة"><option value="الدمام"><option value="الخبر"><option value="الظهران"><option value="الأحساء"><option value="القطيف"><option value="الجبيل"><option value="الطائف"><option value="تبوك"><option value="بريدة"><option value="عنيزة"><option value="الرس"><option value="حائل"><option value="أبها"><option value="خميس مشيط"><option value="جازان"><option value="نجران"><option value="الباحة"><option value="سكاكا"><option value="عرعر"><option value="ينبع"><option value="حفر الباطن"><option value="الخفجي"><option value="الخرج"><option value="المجمعة"><option value="الزلفي"><option value="وادي الدواسر"><option value="بيشة"><option value="النماص"><option value="محايل عسير"><option value="شرورة"><option value="طريف"><option value="رفحاء"><option value="القريات"><option value="أملج"><option value="الوجه"><option value="ضبا"><option value="حقل"><option value="رابغ"><option value="دومة الجندل">
+                                </datalist>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">الحي</label>
@@ -171,7 +174,7 @@
                     <label class="form-label fw-bold">المدينة</label>
                     <select class="form-select" id="filterCity">
                         <option value="all">كل المدن</option>
-                        <option value="الرياض">الرياض</option><option value="مكة المكرمة">مكة المكرمة</option><option value="المدينة المنورة">المدينة المنورة</option><option value="جدة">جدة</option><option value="الدمام">الدمام</option>
+                        <option value="الرياض">الرياض</option><option value="جدة">جدة</option><option value="مكة المكرمة">مكة المكرمة</option><option value="المدينة المنورة">المدينة المنورة</option><option value="الدمام">الدمام</option><option value="الخبر">الخبر</option><option value="الظهران">الظهران</option><option value="الأحساء">الأحساء</option><option value="القطيف">القطيف</option><option value="الجبيل">الجبيل</option><option value="الطائف">الطائف</option><option value="تبوك">تبوك</option><option value="بريدة">بريدة</option><option value="عنيزة">عنيزة</option><option value="الرس">الرس</option><option value="حائل">حائل</option><option value="أبها">أبها</option><option value="خميس مشيط">خميس مشيط</option><option value="جازان">جازان</option><option value="نجران">نجران</option><option value="الباحة">الباحة</option><option value="سكاكا">سكاكا</option><option value="عرعر">عرعر</option><option value="ينبع">ينبع</option><option value="حفر الباطن">حفر الباطن</option><option value="الخفجي">الخفجي</option><option value="الخرج">الخرج</option><option value="المجمعة">المجمعة</option><option value="الزلفي">الزلفي</option><option value="وادي الدواسر">وادي الدواسر</option><option value="بيشة">بيشة</option><option value="النماص">النماص</option><option value="محايل عسير">محايل عسير</option><option value="شرورة">شرورة</option><option value="طريف">طريف</option><option value="رفحاء">رفحاء</option><option value="القريات">القريات</option><option value="أملج">أملج</option><option value="الوجه">الوجه</option><option value="ضبا">ضبا</option><option value="حقل">حقل</option><option value="رابغ">رابغ</option><option value="دومة الجندل">دومة الجندل</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -294,7 +297,7 @@
                 images: visitorImagesData,
                 lat: vSelectedLat, 
                 lng: vSelectedLng, 
-                google_map_url: document.getElementById('vGoogleMapUrl').value, // إضافة رابط جوجل للزائر
+                google_map_url: document.getElementById('vGoogleMapUrl').value,
                 status: 'pending' 
             };
 
