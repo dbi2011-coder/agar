@@ -6,6 +6,7 @@
     <title>لوحة تحكم المسوق | الإدارة</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -120,9 +121,13 @@
                     </div>
                     
                     <div class="col-12">
-                        <label class="form-label fw-bold text-primary"><i class="fas fa-map-marker-alt"></i> تحديد موقع العقار على الخريطة (اضغط على الخريطة لوضع المؤشر)</label>
+                        <label class="form-label fw-bold text-primary"><i class="fas fa-map-marker-alt"></i> تحديد موقع العقار</label>
+                        <div class="input-group mb-2" dir="ltr">
+                            <input type="text" class="form-control text-end" id="mapUrlInput" placeholder="الصق رابط جوجل ماب (الطويل) أو الإحداثيات هنا">
+                            <button class="btn btn-secondary fw-bold" type="button" onclick="extractLocationFromUrl()"><i class="fas fa-search-location"></i> تحديد من الرابط</button>
+                        </div>
                         <div id="mapPicker"></div>
-                        <div class="form-text mt-1 text-muted" id="mapStatus">لم يتم تحديد موقع بعد.</div>
+                        <div class="form-text mt-1 text-muted" id="mapStatus">يمكنك أيضاً الضغط مباشرة على الخريطة لتحديد الموقع.</div>
                     </div>
 
                     <div class="col-12">
@@ -166,7 +171,6 @@
         let editingId = null; let processingPendingId = null; let currentImagesData = [];
         let allDBProperties = []; let allDBPending = [];
         
-        // متغيرات الخريطة
         let map; let marker; let selectedLat = null; let selectedLng = null;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -190,27 +194,47 @@
             document.getElementById('loginSection').classList.add('d-none');
             document.getElementById('adminSection').classList.remove('d-none');
             document.getElementById('logoutBtn').classList.remove('d-none');
-            setTimeout(initMap, 500); // تهيئة الخريطة بعد ظهور القسم
+            setTimeout(initMap, 500); 
         }
         
         function logout() { sessionStorage.removeItem('isAdminLoggedIn'); location.reload(); }
 
-        // إعداد الخريطة
         function initMap() {
-            if(map) return; // لمنع تكرار التهيئة
-            // الإحداثيات الافتراضية للرياض
+            if(map) return; 
             map = L.map('mapPicker').setView([24.7136, 46.6753], 10);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
             map.on('click', function(e) {
-                selectedLat = e.latlng.lat;
-                selectedLng = e.latlng.lng;
-                if (marker) { map.removeLayer(marker); }
-                marker = L.marker([selectedLat, selectedLng]).addTo(map);
-                document.getElementById('mapStatus').innerHTML = `<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> تم تحديد الموقع بنجاح.</span>`;
+                updateMapMarker(e.latlng.lat, e.latlng.lng, "تم تحديد الموقع يدوياً بنجاح.");
             });
+        }
+
+        // استخراج الإحداثيات من الرابط
+        function extractLocationFromUrl() {
+            const input = document.getElementById('mapUrlInput').value;
+            // دالة للبحث عن أي رقمين عشريين متجاورين (يمثلان الإحداثيات)
+            const regex = /(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)/;
+            const match = input.match(regex);
+            
+            if (match) {
+                const lat = parseFloat(match[1]);
+                const lng = parseFloat(match[2]);
+                updateMapMarker(lat, lng, "تم استخراج الموقع من الرابط بنجاح!");
+                document.getElementById('mapUrlInput').value = ''; // تفريغ الحقل بعد النجاح
+            } else {
+                alert('عذراً، لم نتمكن من العثور على إحداثيات في النص. يرجى لصق الرابط الطويل لخرائط جوجل أو كتابة الإحداثيات المباشرة (مثل: 24.71, 46.67).');
+            }
+        }
+
+        function updateMapMarker(lat, lng, successMsg) {
+            selectedLat = lat;
+            selectedLng = lng;
+            if (marker) { map.removeLayer(marker); }
+            marker = L.marker([selectedLat, selectedLng]).addTo(map);
+            map.setView([selectedLat, selectedLng], 15);
+            document.getElementById('mapStatus').innerHTML = `<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> ${successMsg}</span>`;
         }
 
         document.getElementById('propImageInput').addEventListener('change', async function(e) {
@@ -272,8 +296,8 @@
                 owner_phone: document.getElementById('propOwnerPhone').value,
                 description: document.getElementById('propDesc').value,
                 images: currentImagesData,
-                lat: selectedLat, // إضافة خط العرض
-                lng: selectedLng, // إضافة خط الطول
+                lat: selectedLat, 
+                lng: selectedLng, 
                 status: 'approved' 
             };
 
@@ -375,14 +399,10 @@
             document.getElementById('propOwnerPhone').value = prop.owner_phone || '';
             document.getElementById('propDesc').value = prop.description;
 
-            // استعادة بيانات الخريطة
             selectedLat = prop.lat || null;
             selectedLng = prop.lng || null;
             if(selectedLat && selectedLng && map) {
-                if (marker) map.removeLayer(marker);
-                marker = L.marker([selectedLat, selectedLng]).addTo(map);
-                map.setView([selectedLat, selectedLng], 14);
-                document.getElementById('mapStatus').innerHTML = `<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> تم استعادة موقع العقار. يمكنك تغييره بالضغط على الخريطة.</span>`;
+                updateMapMarker(selectedLat, selectedLng, "تم استعادة موقع العقار.");
             } else {
                 if(marker && map) map.removeLayer(marker);
                 document.getElementById('mapStatus').innerHTML = `لم يتم تحديد موقع بعد.`;
@@ -412,11 +432,11 @@
             document.getElementById('formTitle').textContent = 'إضافة عقار جديد';
             document.getElementById('formTitle').classList.replace('text-warning', 'text-primary');
             document.getElementById('imagePreviewContainer').innerHTML = '';
+            document.getElementById('mapUrlInput').value = '';
             const btn = document.getElementById('submitBtn');
             btn.textContent = 'حفظ ونشر العقار'; btn.classList.replace('btn-warning', 'btn-success');
             toggleCustomCity();
             
-            // إعادة تعيين الخريطة
             selectedLat = null; selectedLng = null;
             if(marker && map) map.removeLayer(marker);
             document.getElementById('mapStatus').innerHTML = `لم يتم تحديد موقع بعد.`;
