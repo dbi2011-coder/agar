@@ -106,8 +106,12 @@
                             
                             <div class="col-12">
                                 <label class="form-label fw-bold text-primary"><i class="fas fa-map-marker-alt"></i> تحديد موقع العقار على الخريطة (اختياري)</label>
+                                <div class="input-group mb-2" dir="ltr">
+                                    <input type="text" class="form-control text-end" id="vMapUrlInput" placeholder="الصق رابط جوجل ماب (الطويل) أو الإحداثيات هنا">
+                                    <button class="btn btn-secondary fw-bold" type="button" onclick="vExtractLocationFromUrl()"><i class="fas fa-search-location"></i> تحديد</button>
+                                </div>
                                 <div id="vMapPicker"></div>
-                                <div class="form-text mt-1 text-muted" id="vMapStatus">لم يتم تحديد موقع بعد. اضغط على الخريطة لوضع المؤشر.</div>
+                                <div class="form-text mt-1 text-muted" id="vMapStatus">أو اضغط مباشرة على الخريطة لوضع المؤشر.</div>
                             </div>
 
                             <div class="col-12">
@@ -182,7 +186,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // إعداد Supabase
         const supabaseUrl = 'https://qozdtxrvzyjvoatyizrg.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvemR0eHJ2enlqdm9hdHlpenJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODg2NTEsImV4cCI6MjA4NzA2NDY1MX0.TauoT3b3L_ucs7pArG1J3rGmlAs2-b_5AZ2nlIPn18k';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -200,24 +203,43 @@
         // تهيئة الخريطة عند فتح المودال الخاص بالزائر
         document.getElementById('submitPropertyModal').addEventListener('shown.bs.modal', function () {
             if (!vMap) {
-                // الرياض كمدينة افتراضية
                 vMap = L.map('vMapPicker').setView([24.7136, 46.6753], 10);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(vMap);
 
                 vMap.on('click', function(e) {
-                    vSelectedLat = e.latlng.lat;
-                    vSelectedLng = e.latlng.lng;
-                    if (vMarker) { vMap.removeLayer(vMarker); }
-                    vMarker = L.marker([vSelectedLat, vSelectedLng]).addTo(vMap);
-                    document.getElementById('vMapStatus').innerHTML = `<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> تم تحديد الموقع بنجاح.</span>`;
+                    vUpdateMapMarker(e.latlng.lat, e.latlng.lng, "تم تحديد الموقع يدوياً بنجاح.");
                 });
             } else {
-                // إعادة حساب أبعاد الخريطة لأنها كانت مخفية
                 vMap.invalidateSize();
             }
         });
+
+        // استخراج إحداثيات الزائر من الرابط
+        function vExtractLocationFromUrl() {
+            const input = document.getElementById('vMapUrlInput').value;
+            const regex = /(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)/;
+            const match = input.match(regex);
+            
+            if (match) {
+                const lat = parseFloat(match[1]);
+                const lng = parseFloat(match[2]);
+                vUpdateMapMarker(lat, lng, "تم استخراج الموقع من الرابط بنجاح!");
+                document.getElementById('vMapUrlInput').value = ''; 
+            } else {
+                alert('عذراً، لم نتمكن من العثور على إحداثيات. يرجى لصق الرابط الطويل أو كتابة الإحداثيات مباشرة.');
+            }
+        }
+
+        function vUpdateMapMarker(lat, lng, successMsg) {
+            vSelectedLat = lat;
+            vSelectedLng = lng;
+            if (vMarker) { vMap.removeLayer(vMarker); }
+            vMarker = L.marker([vSelectedLat, vSelectedLng]).addTo(vMap);
+            vMap.setView([vSelectedLat, vSelectedLng], 15);
+            document.getElementById('vMapStatus').innerHTML = `<span class="text-success fw-bold"><i class="fas fa-check-circle"></i> ${successMsg}</span>`;
+        }
 
         let visitorImagesData = [];
         
@@ -266,9 +288,9 @@
                 district: document.getElementById('vDistrict').value,
                 description: document.getElementById('vDesc').value,
                 images: visitorImagesData,
-                lat: vSelectedLat, // جلب خط العرض
-                lng: vSelectedLng, // جلب خط الطول
-                status: 'pending' // كطلب جديد للمراجعة
+                lat: vSelectedLat, 
+                lng: vSelectedLng, 
+                status: 'pending' 
             };
 
             const { data, error } = await supabaseClient.from('properties').insert([pendingProp]);
@@ -282,12 +304,12 @@
             } else {
                 alert("تم استلام طلبك بنجاح! سيقوم فريقنا بمراجعته والتواصل معك قريباً.");
                 document.getElementById('visitorPropertyForm').reset();
+                document.getElementById('vMapUrlInput').value = '';
                 
-                // إعادة تعيين الخريطة للزائر
                 vSelectedLat = null;
                 vSelectedLng = null;
                 if(vMarker && vMap) vMap.removeLayer(vMarker);
-                document.getElementById('vMapStatus').innerHTML = `لم يتم تحديد موقع بعد. اضغط على الخريطة لوضع المؤشر.`;
+                document.getElementById('vMapStatus').innerHTML = `أو اضغط مباشرة على الخريطة لوضع المؤشر.`;
                 if(vMap) vMap.setView([24.7136, 46.6753], 10);
 
                 var modal = bootstrap.Modal.getInstance(document.getElementById('submitPropertyModal'));
